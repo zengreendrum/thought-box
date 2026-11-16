@@ -1,0 +1,1801 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thought Box</title>
+<meta name="description" content="Tasks, ideas and focus, sorted by energy.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Thought Box">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef1ee">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131918">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600&display=swap">
+<style>
+/* Layout: one calm column. Capture at top, battery picker, three cards, then the unsorted inbox. Nothing else competes. */
+:root {
+  --bg: #eef1ee;
+  --surface: #f9faf8;
+  --line: #d5ddd8;
+  --fg: #1f2a27;
+  --muted: #5c6b66;
+  --accent: #2f6b66;
+  --accent-ink: #f4f8f6;
+  --low: #2f68ad;
+  --low-soft: #dce7f5;
+  --med: #2f7d48;
+  --med-soft: #dbeedf;
+  --high: #8a6a00;
+  --high-soft: #fbefc0;
+  --danger: #b3402a;
+  --idea: #6b58a8;
+  --c1: #2f68ad; --c2: #4f9e63; --c3: #d4a514; --grid: #e1e7e3;
+  --font-display: "Lexend", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131918; --surface: #1b2321; --line: #2c3633; --fg: #e3e9e6; --muted: #98a7a1;
+    --accent: #7fb5ae; --accent-ink: #10201d;
+    --low: #8db7ea; --low-soft: #1b2a3c; --med: #86cc98; --med-soft: #1a3022; --high: #efcb4b; --high-soft: #352d10; --danger: #e0806a; --idea: #b7a6ea; --c1: #5a8ed6; --c2: #2a7f45; --c3: #d9b22c; --grid: #26302d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131918; --surface: #1b2321; --line: #2c3633; --fg: #e3e9e6; --muted: #98a7a1;
+  --accent: #7fb5ae; --accent-ink: #10201d;
+  --low: #8db7ea; --low-soft: #1b2a3c; --med: #86cc98; --med-soft: #1a3022; --high: #efcb4b; --high-soft: #352d10; --danger: #e0806a; --idea: #b7a6ea; --c1: #5a8ed6; --c2: #2a7f45; --c3: #d9b22c; --grid: #26302d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.45; }
+.wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: flex; flex-direction: column; gap: 26px; }
+h1, h2 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.25rem; letter-spacing: -0.01em; }
+h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
+.sec { display: flex; flex-direction: column; gap: 12px; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.small { font-size: 0.9rem; color: var(--muted); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sync { font-size: 0.8rem; color: var(--muted); }
+
+.brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.top > .row-gap { flex-wrap: nowrap; }
+.sync { white-space: nowrap; }
+.brand img { width: 36px; height: 36px; border-radius: 9px; flex: none; }
+/* capture */
+.capture { display: flex; gap: 8px; }
+.capture input { flex: 1; min-width: 0; font: inherit; font-size: 1.05rem; padding: 14px 16px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); }
+.capture input::placeholder { color: var(--muted); }
+.drops { display: flex; flex-direction: column; gap: 10px; }
+.capture.idea input { border-style: dashed; }
+.field { flex: 1; min-width: 0; position: relative; display: flex; }
+.field input { width: 100%; }
+.field.has-mic input { padding-right: 52px; }
+.mic { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 0; }
+.mic svg { width: 20px; height: 20px; }
+.mic.listening { background: var(--high-soft); color: var(--high); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--high-soft); } }
+@media (prefers-reduced-motion: reduce) { .mic.listening { animation: none; } }
+.capture .btn-main { flex: none; width: 5.25rem; padding: 0; }
+.capture.idea .btn-main { background: var(--idea); color: var(--accent-ink); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1.5px solid var(--line); margin-top: -8px; }
+.tabs button { border: 0; background: none; padding: 12px 8px; font-family: var(--font-display); font-weight: 500; font-size: 1rem; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1.5px; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+#tabIdeas[aria-selected="true"] { border-bottom-color: var(--idea); }
+.tabs .count { font-family: var(--font-body); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pane { display: flex; flex-direction: column; gap: 26px; }
+.card.idea-card { border-left: 4px solid var(--idea); }
+.idea-meta { font-size: 0.85rem; color: var(--muted); }
+.btn-main { border: 0; border-radius: var(--radius); background: var(--accent); color: var(--accent-ink); padding: 0 20px; font-weight: 700; }
+.flash { font-size: 0.9rem; color: var(--accent); min-height: 1.3em; margin-top: -18px; }
+
+/* battery */
+.battery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; border-radius: calc(var(--radius) + 4px); background: var(--surface); border: 1px solid var(--line); }
+.battery button { border: 0; background: transparent; border-radius: var(--radius); padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); }
+.battery button[aria-pressed="true"] { background: var(--bg); color: var(--fg); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--line); }
+.cells { display: flex; gap: 3px; }
+.cells i { width: 9px; height: 14px; border-radius: 2px; border: 1.5px solid currentColor; }
+.cells i.on { background: currentColor; }
+
+/* cards */
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--line); }
+.card-text { font-size: 1.1rem; overflow-wrap: anywhere; }
+.card-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.02em; }
+.tag.e1 { background: var(--low-soft); color: var(--low); }
+.tag.e2 { background: var(--med-soft); color: var(--med); }
+.tag.e3 { background: var(--high-soft); color: var(--high); }
+.actions { display: flex; gap: 8px; }
+.btn-ghost { border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 14px; font-size: 0.95rem; }
+.btn-done { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.95rem; }
+.btn-done { min-width: 4.6rem; display: inline-flex; align-items: center; justify-content: center; transition: background .2s; }
+.btn-done.checked { background: var(--med); color: var(--accent-ink); animation: pop .35s ease-out; }
+.btn-done svg { width: 20px; height: 20px; }
+@keyframes pop { 0% { transform: scale(0.85); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .btn-done.checked { animation: none; } }
+.card.leaving { opacity: 0; transform: scale(0.98); transition: opacity .25s, transform .25s; }
+.empty { border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 18px; color: var(--muted); }
+.empty strong { color: var(--fg); }
+.more { font-size: 0.9rem; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.link { border: 0; background: none; color: var(--accent); font-weight: 700; padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; }
+
+/* inbox */
+.inbox { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.item { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.item-text { overflow-wrap: anywhere; }
+.sort { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sort .lbl { font-size: 0.85rem; color: var(--muted); margin-right: 2px; }
+.chip { border: 0; border-radius: 999px; padding: 7px 12px; font-size: 0.9rem; font-weight: 700; }
+.chip.e1 { background: var(--low-soft); color: var(--low); }
+.chip.e2 { background: var(--med-soft); color: var(--med); }
+.chip.e3 { background: var(--high-soft); color: var(--high); }
+.chip.suggested { box-shadow: inset 0 0 0 2px currentColor; }
+.chip.ask { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-weight: 400; }
+.hint { font-size: 0.85rem; color: var(--muted); }
+.switch { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip.x { background: transparent; color: var(--muted); font-weight: 400; margin-left: auto; text-decoration: underline; text-underline-offset: 3px; }
+.foot { text-align: center; font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* tappable task text */
+.open-btn { border: 0; background: none; padding: 0; text-align: left; width: 100%; }
+.open-btn:hover .card-text, .open-btn:hover .item-text { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.next { font-size: 0.92rem; color: var(--muted); margin-top: 6px; display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; font-variant-numeric: tabular-nums; }
+.next b { color: var(--fg); font-weight: 400; }
+.notes-btn { display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 3px 10px 3px 8px; font-size: 0.85rem; color: var(--muted); }
+.notes-btn svg { width: 14px; height: 14px; }
+.start-btn { display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 4px 12px 4px 9px; font-size: 0.85rem; font-weight: 700; }
+.start-btn svg { width: 12px; height: 12px; }
+.repeat-badge { font-size: 0.85rem; color: var(--muted); }
+.stale { margin-top: 2px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
+.stale-q { color: var(--muted); }
+.stale .link { font-size: 0.9rem; }
+.actions { flex-wrap: wrap; justify-content: flex-end; }
+.actions .btn-ghost { padding: 8px 12px; }
+.progress { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 10px; }
+.progress i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .35s ease; }
+.progress.e1 i { background: var(--low); }
+.progress.e2 i { background: var(--med); }
+.progress.e3 i { background: var(--high); }
+#sheetProgress .progress { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
+.battery button { flex-direction: row; justify-content: center; gap: 8px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 4px 0; font-size: 0.85rem; color: var(--muted); }
+.toggle-track { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background .2s; flex: none; }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.toggle[aria-checked="true"] { color: var(--fg); }
+.toggle[aria-checked="true"] .toggle-track { background: var(--accent); }
+.toggle[aria-checked="true"] .toggle-knob { transform: translateX(14px); }
+@media (prefers-reduced-motion: reduce) { .toggle-track, .toggle-knob { transition: none; } }
+.bmain { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bcount { flex: none; min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; line-height: 30px; text-align: center; font-variant-numeric: tabular-nums; background: var(--line); color: var(--fg); }
+.battery button[data-b="1"] .bcount { background: var(--low-soft); color: var(--low); }
+.battery button[data-b="2"] .bcount { background: var(--med-soft); color: var(--med); }
+.battery button[data-b="3"] .bcount { background: var(--high-soft); color: var(--high); }
+.battery button[data-b="1"][aria-pressed="true"] .cells { color: var(--low); }
+.battery button[data-b="2"][aria-pressed="true"] .cells { color: var(--med); }
+.battery button[data-b="3"][aria-pressed="true"] .cells { color: var(--high); }
+.sug-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.sug-list li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.sug-list li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+/* task sheet */
+.sheet-bg { position: fixed; inset: 0; background: rgba(10, 16, 14, 0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.sheet { background: var(--bg); width: 100%; max-width: 34rem; max-height: 92%; overflow-y: auto; border-radius: 20px 20px 0 0; padding-inline: 16px; padding-block: 16px calc(28px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 20px; border: 1px solid var(--line); border-bottom: 0; }
+.sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: sticky; top: -16px; background: var(--bg); padding-block: 4px 8px; }
+.sheet-title { flex: 1; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; min-width: 0; color: var(--fg); background: transparent; border: 1.5px solid transparent; border-bottom-color: var(--line); border-radius: 8px 8px 0 0; padding: 6px 4px; }
+.sheet-title:hover { border-bottom-color: var(--muted); }
+.sheet-title:focus { background: var(--surface); border-color: var(--line); border-radius: 8px; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.step { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.check { flex: none; width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; }
+.check svg { width: 16px; height: 16px; opacity: 0; }
+.step.done .check { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.step.done .check svg { opacity: 1; }
+.step-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.step.done .step-text { color: var(--muted); text-decoration: line-through; }
+.step.reorder { gap: 8px; background: var(--bg); position: relative; transition: transform .15s ease; }
+.step.reorder.dragging { transition: none; z-index: 2; background: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.15); border-radius: 10px; }
+.step.reorder .step-text { text-decoration: none; }
+.grip { flex: none; width: 32px; height: 36px; display: grid; place-items: center; color: var(--muted); touch-action: none; cursor: grab; }
+.grip svg { width: 16px; height: 16px; }
+.arrow { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; }
+.arrow svg { width: 16px; height: 16px; }
+.arrow:disabled { opacity: .35; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .step.reorder { transition: none; } }
+.step-tap { border: 0; background: none; padding: 4px 0; text-align: left; font: inherit; color: inherit; cursor: text; }
+.step-edit { flex: 1; min-width: 0; font: inherit; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--accent); background: var(--surface); color: var(--fg); }
+.step-x { border: 0; background: none; color: var(--muted); font-size: 0.85rem; padding: 6px; text-decoration: underline; text-underline-offset: 3px; }
+.add-step { display: flex; gap: 8px; }
+.add-step input, .notes { flex: 1; min-width: 0; font: inherit; padding: 12px 14px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); }
+.notes { width: 100%; min-height: 8rem; resize: vertical; line-height: 1.5; }
+.sug-box { background: var(--surface); border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.sug-box ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; }
+.row-gap { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* progress */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.tile .v { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile .v.sm { font-size: 1.15rem; }
+.tile .s { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.sw.c1 { background: var(--c1); } .sw.c2 { background: var(--c2); } .sw.c3 { background: var(--c3); }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.85rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); font-weight: 700; box-shadow: inset 0 0 0 1px var(--line); }
+.chart-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.legend { display: flex; gap: 14px; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+#chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+#chart .bar-hit { cursor: pointer; }
+#chart .bar-hit:focus { outline: none; }
+#chart .bar-hit:focus-visible .hit-bg, #chart .bar-hit.sel .hit-bg { fill: var(--grid); fill-opacity: 0.7; }
+#tableToggle { align-self: flex-start; }
+.readout { font-size: 0.9rem; min-height: 1.4em; font-variant-numeric: tabular-nums; }
+.readout b { font-weight: 700; }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.table-wrap th, .table-wrap td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.table-wrap th:first-child, .table-wrap td:first-child { text-align: left; }
+.table-wrap th { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+.recent { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.recent-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.reset { border-top: 1px solid var(--line); padding-top: 18px; }
+.reset-box { background: var(--surface); border: 1.5px solid var(--danger); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.btn-danger { border: 0; background: var(--danger); color: var(--accent-ink); border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.95rem; }
+.recent-row .t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.recent-row .d { font-size: 0.85rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; flex: none; white-space: pre-line; }
+/* focus mode */
+.focus { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; }
+.focus-in { max-width: 34rem; margin: 0 auto; min-height: 100%; padding-inline: 16px; padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 28px; }
+.focus-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.focus-task { color: var(--muted); font-size: 0.95rem; overflow-wrap: anywhere; min-width: 0; }
+.focus-main { display: flex; flex-direction: column; gap: 18px; padding-top: 8px; }
+.focus-count { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.focus-step { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 7vw, 2.2rem); line-height: 1.25; text-wrap: balance; overflow-wrap: anywhere; }
+.focus-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 8px; }
+.btn-big { border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 1.1rem; padding: 16px 26px; display: inline-flex; align-items: center; gap: 10px; }
+.btn-big svg { width: 22px; height: 22px; }
+.focus-steps { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.focus-steps .steps { width: 100%; }
+.step.current .step-text { font-weight: 700; }
+.now-tag { flex: none; font-size: 0.75rem; font-weight: 700; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 999px; padding: 2px 8px; }
+.timer { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+.timer-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.timer-chips button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-variant-numeric: tabular-nums; }
+.timebar { height: 18px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.timebar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width 1s linear; }
+.timebar.e1 i { background: var(--c1); } .timebar.e2 i { background: var(--c2); } .timebar.e3 i { background: var(--c3); }
+.timer-note { font-size: 0.9rem; color: var(--muted); }
+.sheet-start { display: flex; }
+.icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; color: var(--fg); }
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+.search { display: flex; gap: 10px; align-items: center; margin-top: -10px; }
+.search input { flex: 1; min-width: 0; font: inherit; padding: 12px 14px; border-radius: var(--radius); border: 1.5px solid var(--accent); background: var(--surface); color: var(--fg); }
+.results { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.result { display: flex; gap: 10px; align-items: flex-start; padding: 12px 0; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; width: 100%; }
+.result .r-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.result .r-text { overflow-wrap: anywhere; }
+.result .r-where { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.kind { flex: none; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--muted); margin-top: 2px; }
+.kind.idea { border-color: var(--idea); color: var(--idea); }
+.seg-wide { display: grid; grid-template-columns: repeat(4, 1fr); border-radius: var(--radius); }
+.seg-wide button { border-radius: 10px; padding: 8px 4px; }
+#sheetStart:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .timebar i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .card.leaving { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand"><img src="icon-192.png" alt="" width="36" height="36">Thought Box</h1>
+    <span class="row-gap">
+      <span class="sync" id="sync">Loading…</span>
+      <button type="button" class="icon-btn" id="searchBtn" aria-label="Search tasks and ideas" aria-expanded="false" aria-controls="searchBar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg></button>
+    </span>
+  </header>
+  <div class="search" id="searchBar" hidden>
+    <input id="searchInput" type="search" placeholder="Search tasks and ideas" aria-label="Search tasks and ideas" autocomplete="off" enterkeyhint="search">
+    <button type="button" class="link" id="searchClose">Close</button>
+  </div>
+
+  <div class="drops">
+    <form class="capture" id="capture" autocomplete="off">
+      <span class="field"><input id="dump" type="text" placeholder="Tasks" aria-label="Add a task" enterkeyhint="done"><button type="button" class="mic" data-for="dump" aria-label="Speak a task" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg></button></span>
+      <button class="btn-main" type="submit">Add</button>
+    </form>
+    <form class="capture idea" id="ideaCapture" autocomplete="off">
+      <span class="field"><input id="ideaDump" type="text" placeholder="Ideas" aria-label="Save an idea" enterkeyhint="done"><button type="button" class="mic" data-for="ideaDump" aria-label="Speak an idea" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg></button></span>
+      <button class="btn-main" type="submit">Save</button>
+    </form>
+  </div>
+  <div class="flash" id="flash" aria-live="polite"></div>
+
+  <div class="tabs" role="tablist" aria-label="View">
+    <button type="button" role="tab" id="tabTasks" aria-controls="tasksPane" aria-selected="true">Tasks</button>
+    <button type="button" role="tab" id="tabIdeas" aria-controls="ideasPane" aria-selected="false">Ideas <span class="count" id="ideaCount"></span></button>
+    <button type="button" role="tab" id="tabProgress" aria-controls="progressPane" aria-selected="false">Progress</button>
+  </div>
+
+  <div class="pane" id="searchPane" hidden>
+    <section class="sec" aria-labelledby="results-h">
+      <div class="sec-head"><h2 id="results-h">Results</h2><span class="small" id="resultCount"></span></div>
+      <div class="results" id="results"></div>
+    </section>
+  </div>
+
+  <div class="pane" id="tasksPane" role="tabpanel" aria-labelledby="tabTasks">
+  <section class="sec" aria-labelledby="bat-h">
+    <div class="sec-head">
+      <h2 id="bat-h">Energy Level</h2>
+      <button type="button" class="toggle" id="cascadeBtn" role="switch" aria-checked="false">
+        <span class="toggle-track" aria-hidden="true"><span class="toggle-knob"></span></span>
+        <span>Include level below</span>
+      </button>
+    </div>
+    <p class="small" id="cascadeNote" style="margin:-4px 0 0" hidden>Medium also shows Low tasks. High also shows Medium tasks.</p>
+    <div class="battery" id="battery" role="group" aria-label="Energy level">
+      <button type="button" data-b="1" aria-pressed="false"><span class="bcount"></span><span class="bmain"><span class="cells"><i class="on"></i><i></i><i></i></span>Low</span></button>
+      <button type="button" data-b="2" aria-pressed="true"><span class="bcount"></span><span class="bmain"><span class="cells"><i class="on"></i><i class="on"></i><i></i></span>Medium</span></button>
+      <button type="button" data-b="3" aria-pressed="false"><span class="bcount"></span><span class="bmain"><span class="cells"><i class="on"></i><i class="on"></i><i class="on"></i></span>High</span></button>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="now-h">
+    <div class="sec-head"><h2 id="now-h">Tasks</h2></div>
+    <div class="cards" id="cards"></div>
+    <div class="more" id="more"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="inbox-h" id="inboxSec">
+    <div class="sec-head"><h2 id="inbox-h">Inbox</h2><span class="small" id="inboxCount"></span></div>
+    <p class="small" style="margin:0">Sort these whenever you feel like it. Tap how much energy each one takes.</p>
+    <div class="inbox" id="inbox"></div>
+  </section>
+  </div>
+
+  <div class="pane" id="progressPane" role="tabpanel" aria-labelledby="tabProgress" hidden>
+    <section class="sec" aria-labelledby="count-h">
+      <div class="sec-head"><h2 id="count-h">Completed</h2><span class="small">All time</span></div>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="chart-h">
+      <div class="sec-head">
+        <h2 id="chart-h">Over time</h2>
+        <div class="seg" role="group" aria-label="Chart period">
+          <button type="button" id="segWeeks" aria-pressed="true">Weeks</button>
+          <button type="button" id="segMonths" aria-pressed="false">Months</button>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sw c1"></i>Low</span><span><i class="sw c2"></i>Medium</span><span><i class="sw c3"></i>High</span>
+        </div>
+        <div id="chart"></div>
+        <div class="readout" id="readout" aria-live="polite"></div>
+        <button type="button" class="link" id="tableToggle" aria-expanded="false">Show as table</button>
+        <div class="table-wrap" id="chartTable" hidden></div>
+      </div>
+    </section>
+
+    <section class="sec" aria-labelledby="time-h">
+      <div class="sec-head"><h2 id="time-h">Time to finish</h2><span class="small">From adding to Done</span></div>
+      <div class="tiles" id="timeTiles"></div>
+      <div class="recent" id="recent"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="data-h" id="dataSec">
+      <div class="sec-head"><h2 id="data-h">Your data</h2></div>
+      <p class="small" style="margin:0">Everything is saved on this device. Save a copy now and then, and keep it somewhere safe like iCloud Drive. You can restore from a copy here, including one saved from the old Claude version.</p>
+      <div class="row-gap">
+        <button type="button" class="btn-ghost" id="backupBtn">Save a copy</button>
+        <button type="button" class="btn-ghost" id="restoreBtn">Restore from a copy</button>
+        <input type="file" id="restoreFile" accept=".csv,text/csv,text/plain" hidden>
+      </div>
+      <span class="small" id="backupNote" aria-live="polite"></span>
+    </section>
+
+    <section class="sec reset" aria-label="Reset progress" id="resetArea"></section>
+  </div>
+
+  <div class="pane" id="ideasPane" role="tabpanel" aria-labelledby="tabIdeas" hidden>
+    <section class="sec" aria-labelledby="ideas-h">
+      <div class="sec-head"><h2 id="ideas-h">Ideas</h2><span class="small">Newest first</span></div>
+      <div class="cards" id="ideas"></div>
+    </section>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<div class="sheet-bg" id="sheetBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Task details">
+    <div class="sheet-head">
+      <input class="sheet-title" id="sheetTitle" type="text" aria-label="Name" enterkeyhint="done" autocomplete="off">
+      <button class="btn-ghost" type="button" id="sheetClose">Close</button>
+    </div>
+
+    <div id="sheetStart"></div>
+
+    <section class="sec" aria-labelledby="steps-h" id="stepsSec">
+      <div class="sec-head"><h2 id="steps-h">Steps</h2><span class="row-gap"><span class="small" id="stepCount"></span><button type="button" class="link" id="reorderBtn" hidden>Reorder</button></span></div>
+      <div id="sheetProgress"></div>
+      <ol class="steps" id="steps"></ol>
+      <form class="add-step" id="addStep" autocomplete="off">
+        <input id="stepInput" type="text" placeholder="Add a small step" aria-label="Add a step" enterkeyhint="done">
+        <button class="btn-main" type="submit">Add</button>
+      </form>
+      <div id="sugArea"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="repeat-h" id="repeatSec">
+      <div class="sec-head"><h2 id="repeat-h">Repeat</h2></div>
+      <div class="seg seg-wide" id="repeatSeg" role="group" aria-labelledby="repeat-h"></div>
+      <p class="small" id="repeatNote" style="margin:0"></p>
+    </section>
+
+    <section class="sec" aria-labelledby="notes-h">
+      <div class="sec-head"><h2 id="notes-h">Notes</h2><span class="small" id="notesState"></span></div>
+      <textarea class="notes" id="notes" placeholder="Anything to remember: where things are, who to ask, links, how it went."></textarea>
+    </section>
+  </div>
+</div>
+
+<div class="focus" id="focus" hidden role="dialog" aria-modal="true" aria-labelledby="focusTitle">
+  <div class="focus-in">
+    <div class="focus-top">
+      <span class="focus-task" id="focusTitle"></span>
+      <button class="btn-ghost" type="button" id="focusExit">Exit</button>
+    </div>
+    <div class="focus-main">
+      <div class="focus-count" id="focusCount"></div>
+      <div id="focusProg"></div>
+      <div class="focus-step" id="focusStep" aria-live="polite"></div>
+      <div class="focus-actions" id="focusActions"></div>
+    </div>
+    <section class="focus-steps" id="focusSteps" aria-label="Steps" hidden></section>
+    <section class="timer" aria-labelledby="timer-h">
+      <h2 id="timer-h">Focus timer</h2>
+      <div id="timerBody"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var ENERGY = { 1: "Low energy", 2: "Medium energy", 3: "High energy" };
+  var LABEL = ["", "Low", "Medium", "High"];
+  var CACHE_KEY = "next-three-v1";
+  var state = { tasks: {}, battery: 2 };
+  var mode = "starting"; // starting | db | local
+  var col = null;
+  var pending = [];
+  var shuffleSeed = 0;
+  var showAll = false;
+  var slots = [], rerollPool = [];
+  // Each energy level shows only the tasks tagged at that level.
+  function fitsLevel(e, level) { return state.cascade ? (e === level || e === level - 1) : e === level; }
+  var sampleApi = null;
+  var suggestions = {};
+  var editing = null;
+
+  async function suggest(t) {
+    suggestions[t.id] = "loading"; render();
+    try {
+      var prompt = "You help sort a personal to-do list by how much energy each item takes.\n" +
+        "Levels: 1 = Low (quick, simple, little focus or decision-making), " +
+        "2 = Medium (moderate effort or a few steps), " +
+        "3 = High (long, demanding, needs real focus, planning, or social energy).\n" +
+        "Item: " + JSON.stringify(t.text) + "\n" +
+        'Reply with JSON only: {"level": 1, 2 or 3, "why": "a reason in under 10 words, no period"}';
+      var r = await sampleApi.json(prompt, { modelTier: "quick" });
+      var lvl = Math.round(Number(r && r.level));
+      if (!(lvl >= 1 && lvl <= 3)) throw { code: "bad_answer" };
+      suggestions[t.id] = { level: lvl, why: typeof r.why === "string" ? r.why.slice(0, 80).replace(/\.$/, "") : "" };
+    } catch (e) {
+      if (e && e.code === "not_granted") { sampleApi = null; delete suggestions[t.id]; flash("Suggestions are turned off. You can still pick a level."); }
+      else suggestions[t.id] = { error: "Couldn't get a suggestion. You can still pick a level." };
+    }
+    render();
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- storage ----------
+  function readCache() {
+    try { var raw = localStorage.getItem(CACHE_KEY); if (raw) { var d = JSON.parse(raw); state.tasks = d.tasks || {}; state.battery = d.battery || 2; state.cascade = !!d.cascade; } } catch (e) {}
+  }
+  function writeCache() {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function persistDoc(id, body) {
+    writeCache();
+    if (mode === "db") { col.doc(id).set(body).catch(onWriteError); }
+    else if (mode === "starting") { pending.push(id); }
+  }
+  function removeDoc(id) {
+    writeCache();
+    if (mode === "db") { col.doc(id).delete().catch(onWriteError); }
+    else if (mode === "starting") { pending.push(id); }
+  }
+  function onWriteError(e) {
+    if (e && e.code === "quota_exceeded") flash("Storage is full. Remove some finished items to make room.");
+    else flash("Couldn't save that change. It's kept on this device for now.");
+  }
+
+  function connect() {
+    mode = "local"; pending = []; setSync();
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  }
+  function setSync() {
+    $("sync").textContent = "Saved on this device";
+  }
+
+  // ---------- actions ----------
+  function newId() { return "t-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
+  function addTask(text) {
+    var id = newId();
+    var t = { kind: "task", text: text, energy: null, status: "open", created: Date.now(), bumped: 0 };
+    state.tasks[id] = t; persistDoc(id, t); render();
+  }
+  function update(id, patch) {
+    var t = Object.assign({}, state.tasks[id], patch);
+    state.tasks[id] = t; persistDoc(id, t); render();
+  }
+  function remove(id) { delete state.tasks[id]; removeDoc(id); render(); }
+  function settingsDoc() { return { kind: "settings", battery: state.battery, cascade: !!state.cascade }; }
+  function setCascade(on) {
+    state.cascade = on; slots = []; showAll = false; shuffleSeed = 0;
+    persistDoc("settings", settingsDoc());
+    render();
+  }
+  function setBattery(b) {
+    state.battery = b; shuffleSeed = 0; showAll = false; slots = [];
+    persistDoc("settings", settingsDoc());
+    if (mode === "db") { /* persistDoc wrote it */ }
+    render();
+  }
+
+  var flashTimer;
+  function flash(msg, undoFn) {
+    var f = $("flash"); f.textContent = msg; clearTimeout(flashTimer);
+    if (undoFn) {
+      var u = el("button", "link", "Undo"); u.type = "button"; u.style.marginLeft = "10px";
+      u.onclick = function () { clearTimeout(flashTimer); f.textContent = ""; undoFn(); };
+      f.appendChild(u);
+    }
+    flashTimer = setTimeout(function () { f.textContent = ""; }, undoFn ? 6000 : 2600);
+  }
+
+  // ---------- completing, removing, repeating ----------
+  var DAY = 86400000, STALE_MS = 21 * DAY;
+  var REPEAT = { never: "Doesn't repeat", day: "Every day", week: "Every week", month: "Every month" };
+  var REPEAT_SHORT = { day: "Daily", week: "Weekly", month: "Monthly" };
+  function nextOccurrence(rep, from) {
+    var d = new Date(from); d.setHours(0, 0, 0, 0);
+    if (rep === "day") d.setDate(d.getDate() + 1);
+    else if (rep === "week") d.setDate(d.getDate() + 7);
+    else if (rep === "month") { var day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); }
+    return d.getTime();
+  }
+  function completeTask(id, finishedAt) {
+    var before = state.tasks[id]; if (!before) return;
+    finishedAt = finishedAt || Date.now();
+    var spawnId = null;
+    update(id, { status: "done", doneAt: finishedAt });
+    if (before.repeat && REPEAT_SHORT[before.repeat]) {
+      spawnId = newId();
+      var back = nextOccurrence(before.repeat, finishedAt);
+      var copy = { kind: "task", text: before.text, energy: before.energy, status: "open", created: back, hiddenUntil: back, bumped: 0, repeat: before.repeat,
+        notes: before.notes || "", steps: (before.steps || []).map(function (s) { return { id: newId(), text: s.text, done: false }; }) };
+      state.tasks[spawnId] = copy; persistDoc(spawnId, copy); render();
+    }
+    var when = spawnId ? " It comes back " + (before.repeat === "day" ? "tomorrow" : new Date(nextOccurrence(before.repeat, finishedAt)).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })) + "." : "";
+    flash("Nice. That's done." + when, function () {
+      if (spawnId) { delete state.tasks[spawnId]; removeDoc(spawnId); }
+      state.tasks[id] = before; persistDoc(id, before); render();
+    });
+  }
+  function removeWithUndo(id, msg) {
+    var saved = Object.assign({}, state.tasks[id]);
+    remove(id);
+    flash(msg || "Task removed.", function () { state.tasks[id] = saved; persistDoc(id, saved); render(); });
+  }
+  function isStale(t) {
+    var now = Date.now();
+    return t.kind === "task" && t.status === "open" && !t.repeat && now - (t.created || now) > STALE_MS && !(t.checkedAt && now - t.checkedAt < STALE_MS);
+  }
+  function staleStrip(t) {
+    if (!isStale(t)) return null;
+    var wk = Math.floor((Date.now() - t.created) / (7 * DAY));
+    var box = el("div", "stale");
+    box.appendChild(el("span", "stale-q", "Added " + (wk >= 2 ? wk + " weeks" : "a while") + " ago. Still want this?"));
+    var r = el("div", "row-gap");
+    var keep = el("button", "link", "Keep"); keep.type = "button";
+    keep.onclick = function () { update(t.id, { checkedAt: Date.now() }); };
+    var idea = el("button", "link", "Make it an idea"); idea.type = "button";
+    idea.onclick = function () { update(t.id, { kind: "idea", created: Date.now() }); flash("Moved to Ideas."); };
+    var rm = el("button", "link", "Remove"); rm.type = "button";
+    rm.onclick = function () { removeWithUndo(t.id); };
+    r.appendChild(keep); r.appendChild(idea); r.appendChild(rm); box.appendChild(r);
+    return box;
+  }
+
+  // ---------- render ----------
+  function list() { return Object.keys(state.tasks).map(function (id) { return Object.assign({ id: id }, state.tasks[id]); }); }
+  function isToday(ms) { var d = new Date(ms), n = new Date(); return d.toDateString() === n.toDateString(); }
+  function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function render() {
+    var all = list();
+    var nowMs = Date.now();
+    var resting = all.filter(function (t) { return t.kind === "task" && t.status === "open" && t.hiddenUntil > nowMs; });
+    var open = all.filter(function (t) { return t.kind === "task" && t.status === "open" && !(t.hiddenUntil > nowMs); });
+    var unsorted = open.filter(function (t) { return !t.energy; }).sort(function (a, b) { return a.created - b.created; });
+    var sorted = open.filter(function (t) { return t.energy; });
+    var fits = sorted.filter(function (t) { return fitsLevel(t.energy, state.battery); });
+    var elsewhere = sorted.length - fits.length;
+    fits.sort(function (a, b) {
+      if (shuffleSeed) return hash(a.id + shuffleSeed) - hash(b.id + shuffleSeed);
+      return (a.bumped || 0) - (b.bumped || 0) || a.created - b.created;
+    });
+    // Sticky slots: cards stay in place; only an emptied or rerolled slot gets a new task.
+    var fitIds = fits.map(function (t) { return t.id; });
+    var byId = {}; fits.forEach(function (t) { byId[t.id] = t; });
+    var used = {}, placed = [];
+    for (var si = 0; si < 3; si++) {
+      var sid = slots[si];
+      if (sid && byId[sid] && !used[sid]) { placed[si] = sid; used[sid] = true; } else placed[si] = null;
+    }
+    var restIds = fitIds.filter(function (id) { return !used[id]; });
+    for (var pi = 0; pi < 3; pi++) if (!placed[pi] && restIds.length) { placed[pi] = restIds.shift(); used[placed[pi]] = true; }
+    placed = placed.filter(Boolean);
+    slots = placed.slice();
+    var ordered = placed.concat(restIds).map(function (id) { return byId[id]; });
+    var show = showAll ? ordered : ordered.slice(0, 3);
+    rerollPool = restIds;
+
+    // battery
+    Array.prototype.forEach.call($("battery").querySelectorAll("button"), function (b) {
+      var lv = +b.dataset.b;
+      b.setAttribute("aria-pressed", String(lv === state.battery));
+      var n = sorted.filter(function (t) { return fitsLevel(t.energy, lv); }).length;
+      b.querySelector(".bcount").textContent = String(n);
+      b.setAttribute("aria-label", LABEL[lv] + " energy, " + n + " task" + (n === 1 ? "" : "s"));
+    });
+
+    // cards
+    var cards = $("cards"); cards.textContent = "";
+    if (!show.length) {
+      var e = el("div", "empty");
+      if (!open.length) {
+        e.innerHTML = "<strong>Nothing here yet.</strong> Type anything into the box above, as messy as you like. It lands in your inbox, and nothing needs sorting right away.";
+      } else if (unsorted.length && !sorted.length) {
+        e.innerHTML = "<strong>Your inbox has " + unsorted.length + " item" + (unsorted.length > 1 ? "s" : "") + ".</strong> Tap an energy level on one and it can show up here.";
+      } else {
+        e.innerHTML = "<strong>No tasks at this energy level.</strong> That's fine. Rest counts, or switch levels if you want something else.";
+      }
+      cards.appendChild(e);
+    }
+    show.forEach(function (t) {
+      var c = el("article", "card");
+      c.appendChild(openButton(t, "card-text"));
+      var row = el("div", "card-row");
+      if (editing === t.id) {
+        var sw = el("div", "switch");
+        sw.appendChild(el("span", "hint", "Move to:"));
+        [1, 2, 3].filter(function (n) { return n !== t.energy; }).forEach(function (n) {
+          var b = el("button", "chip e" + n, LABEL[n]); b.type = "button";
+          b.setAttribute("aria-label", "Change to " + ENERGY[n].toLowerCase());
+          b.onclick = function () {
+            editing = null;
+            update(t.id, { energy: n });
+            if (!fitsLevel(n, state.battery)) flash("Moved to " + LABEL[n] + ". Tap " + LABEL[n] + " above to see it.");
+          };
+          sw.appendChild(b);
+        });
+        var cancel = el("button", "link", "Cancel"); cancel.type = "button";
+        cancel.onclick = function () { editing = null; render(); };
+        sw.appendChild(cancel);
+        row.appendChild(sw);
+        c.appendChild(row); cards.appendChild(c);
+        return;
+      }
+      var tag = el("button", "tag e" + t.energy, LABEL[t.energy]); tag.type = "button";
+      tag.style.border = "0";
+      tag.setAttribute("aria-label", ENERGY[t.energy] + ". Change energy level");
+      tag.onclick = function () { editing = t.id; render(); };
+      row.appendChild(tag);
+      var acts = el("div", "actions");
+      var reroll = el("button", "btn-ghost", "Reroll"); reroll.type = "button";
+      reroll.setAttribute("aria-label", "Reroll: move " + t.text + " to the back of the line");
+      reroll.onclick = function () {
+        var k = slots.indexOf(t.id);
+        if (k < 0) { update(t.id, { bumped: Date.now() }); return; }
+        if (!rerollPool.length) { flash("No other tasks at this energy level right now."); return; }
+        slots[k] = rerollPool[0];
+        update(t.id, { bumped: Date.now() });
+      };
+      var later = el("button", "btn-ghost", "Remove"); later.type = "button";
+      later.setAttribute("aria-label", "Remove task: " + t.text);
+      later.onclick = function () { removeWithUndo(t.id); };
+      var done = el("button", "btn-done", "Done"); done.type = "button";
+      done.onclick = function () {
+        if (done.classList.contains("checked")) return;
+        var finishedAt = Date.now();
+        done.classList.add("checked");
+        done.innerHTML = CHECK;
+        done.setAttribute("aria-label", "Done");
+        later.disabled = true; reroll.disabled = true;
+        setTimeout(function () { c.classList.add("leaving"); }, 650);
+        setTimeout(function () { completeTask(t.id, finishedAt); }, 900);
+      };
+      acts.appendChild(reroll); acts.appendChild(later); acts.appendChild(done); row.appendChild(acts);
+      c.appendChild(row);
+      var st = staleStrip(t); if (st) c.appendChild(st);
+      cards.appendChild(c);
+    });
+
+    // more line
+    var more = $("more"); more.textContent = "";
+    var waiting = fits.length - show.length;
+    var bits = [];
+    if (waiting > 0) bits.push(waiting + " more waiting");
+    if (elsewhere > 0) bits.push(elsewhere + " at other levels");
+    $("cascadeBtn").setAttribute("aria-checked", String(!!state.cascade));
+    $("cascadeNote").hidden = !state.cascade;
+    if (resting.length) bits.push(resting.length + " repeating " + (resting.length === 1 ? "task comes" : "tasks come") + " back later");
+    if (bits.length) more.appendChild(el("span", null, bits.join(" · ")));
+    var links = el("div", "row-gap");
+    if (waiting > 0) {
+      var sh = el("button", "link", "Show me different ones"); sh.type = "button";
+      sh.onclick = function () { shuffleSeed = Math.floor(Math.random() * 1e9) + 1; slots = []; render(); };
+      links.appendChild(sh);
+    }
+    if (waiting > 0 || showAll) {
+      var all3 = el("button", "link", showAll ? "Show just 3" : "See all " + fits.length); all3.type = "button";
+      all3.setAttribute("aria-expanded", String(showAll));
+      all3.onclick = function () { showAll = !showAll; render(); };
+      links.appendChild(all3);
+    }
+    if (links.childNodes.length) more.appendChild(links);
+
+    // inbox
+    var inbox = $("inbox"); inbox.textContent = "";
+    $("inboxSec").hidden = !unsorted.length;
+    $("inboxCount").textContent = unsorted.length ? unsorted.length + " to sort" : "";
+    unsorted.forEach(function (t) {
+      var it = el("div", "item");
+      it.appendChild(openButton(t, "item-text"));
+      var sug = suggestions[t.id];
+      var s = el("div", "sort");
+      [1, 2, 3].forEach(function (n) {
+        var cls = "chip e" + n + (sug && sug.level === n ? " suggested" : "");
+        var b = el("button", cls, LABEL[n]); b.type = "button";
+        b.setAttribute("aria-label", "Takes " + ENERGY[n].toLowerCase());
+        b.onclick = function () { delete suggestions[t.id]; update(t.id, { energy: n }); };
+        s.appendChild(b);
+      });
+      if (sampleApi && !sug) {
+        var a = el("button", "chip ask", "Suggest"); a.type = "button";
+        a.setAttribute("aria-label", "Suggest an energy level");
+        a.onclick = function () { suggest(t); };
+        s.appendChild(a);
+      }
+      var x = el("button", "chip x", "Remove"); x.type = "button";
+      x.onclick = function () { delete suggestions[t.id]; remove(t.id); };
+      s.appendChild(x);
+      it.appendChild(s);
+      var stI = staleStrip(t); if (stI) it.appendChild(stI);
+      if (sug) {
+        var msg = sug === "loading" ? "Thinking about it…"
+          : sug.error ? sug.error
+          : "Suggested: " + LABEL[sug.level] + (sug.why ? ". " + sug.why : "") + ". Tap a level to sort it.";
+        it.appendChild(el("div", "hint", msg));
+      }
+      inbox.appendChild(it);
+    });
+
+    var doneToday = all.filter(function (t) { return t.status === "done" && t.doneAt && isToday(t.doneAt); }).length;
+    $("foot").textContent = doneToday ? doneToday + " done today" : "";
+    renderIdeas(all.filter(function (t) { return t.kind === "idea"; }));
+    if (tab === "progress") renderProgress();
+    if (openId) renderSheet();
+    if (focusId) renderFocus();
+    if (searchOpen && $("searchInput").value.trim()) renderSearch();
+  }
+
+  // ---------- task sheet: steps + notes ----------
+  var openId = null, notesTimer = null, stepSug = null, lastFocus = null;
+  var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+  var PENCIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.8 2.7l2.5 2.5L5.6 12.9 2.5 13.5l.6-3.1z"/><path d="M9.3 4.2l2.5 2.5"/></svg>';
+
+  // Task text opens the sheet; a separate pencil button jumps straight to notes.
+  var PLAY = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.2-4.8c.4-.3.4-.8 0-1L5.9 2.7c-.4-.3-.9 0-.9.5z"/></svg>';
+  function openButton(t, textCls) {
+    var wrap = el("div", "open-wrap");
+    var b = el("button", "open-btn"); b.type = "button";
+    b.setAttribute("aria-label", t.text + ". Open steps and notes");
+    b.appendChild(el("div", textCls, t.text));
+    b.onclick = function () { openSheet(t.id); };
+    wrap.appendChild(b);
+    var steps = t.steps || [];
+    var left = steps.filter(function (s) { return !s.done; });
+    var canStart = t.kind === "task" && t.status === "open" && t.energy && !(t.hiddenUntil > Date.now());
+    if (steps.length || t.notes || canStart || REPEAT_SHORT[t.repeat]) {
+      var n = el("div", "next");
+      if (canStart) {
+        var sb = el("button", "start-btn"); sb.type = "button";
+        sb.innerHTML = PLAY; sb.appendChild(document.createTextNode("Start"));
+        sb.setAttribute("aria-label", "Start " + t.text + " in focus mode");
+        sb.onclick = function () { openFocus(t.id); };
+        n.appendChild(sb);
+      }
+      if (left.length) { var span = el("span"); span.appendChild(document.createTextNode("Next: ")); span.appendChild(el("b", null, left[0].text)); n.appendChild(span); }
+      if (steps.length) n.appendChild(el("span", null, (steps.length - left.length) + " of " + steps.length + " steps"));
+      if (t.notes) {
+        var nb = el("button", "notes-btn"); nb.type = "button";
+        nb.innerHTML = PENCIL; nb.appendChild(document.createTextNode("Notes"));
+        nb.setAttribute("aria-label", "Open notes for " + t.text);
+        nb.onclick = function () { openSheet(t.id, true); };
+        n.appendChild(nb);
+      }
+      if (REPEAT_SHORT[t.repeat]) n.appendChild(el("span", "repeat-badge", "↻ " + REPEAT_SHORT[t.repeat]));
+      wrap.appendChild(n);
+    }
+    if (steps.length > 1) wrap.appendChild(progressBar(steps.length - left.length, steps.length, t.energy));
+    return wrap;
+  }
+
+  function progressBar(done, total, energy) {
+    var bar = el("div", "progress" + (energy ? " e" + energy : ""));
+    bar.setAttribute("role", "progressbar");
+    bar.setAttribute("aria-valuemin", "0");
+    bar.setAttribute("aria-valuemax", String(total));
+    bar.setAttribute("aria-valuenow", String(done));
+    bar.setAttribute("aria-label", done + " of " + total + " steps done");
+    var fill = el("i"); fill.style.width = Math.round(done / total * 100) + "%";
+    bar.appendChild(fill);
+    return bar;
+  }
+
+  function openSheet(id, toNotes) {
+    lastFocus = document.activeElement;
+    openId = id; stepSug = null; reorderMode = false; stepEditing = null;
+    var t = state.tasks[id];
+    $("sheetTitle").value = t.text;
+    $("notes").value = t.notes || "";
+    var isIdea = t.kind === "idea";
+    $("stepsSec").hidden = isIdea;
+    $("notes").placeholder = isIdea ? "Add more detail: where you saw it, why it stuck, links, anything." : "Anything to remember: where things are, who to ask, links, how it went.";
+    $("notesState").textContent = "";
+    $("sheetBg").hidden = false;
+    document.body.style.overflow = "hidden";
+    renderSheet();
+    if (toNotes) { $("notes").scrollIntoView({ block: "center" }); $("notes").focus({ preventScroll: true }); return; }
+    $("sheetClose").focus();
+  }
+  function closeSheet() {
+    if (!openId) return;
+    saveNotes(); saveTitle();
+    openId = null; stepSug = null;
+    $("sheetBg").hidden = true;
+    document.body.style.overflow = "";
+    render();
+    if (lastFocus && lastFocus.isConnected) try { lastFocus.focus(); } catch (e) {}
+  }
+  function saveNotes() {
+    clearTimeout(notesTimer);
+    if (!openId || !state.tasks[openId]) return;
+    var v = $("notes").value;
+    if ((state.tasks[openId].notes || "") !== v) { update(openId, { notes: v }); $("notesState").textContent = "Saved"; }
+  }
+  function setSteps(steps) { update(openId, { steps: steps }); }
+
+  function renderSheet() {
+    if (!openId) return;
+    var t = state.tasks[openId];
+    if (!t) { closeSheet(); return; }
+    var ss = $("sheetStart"); ss.textContent = "";
+    if (t.kind === "task" && t.status === "open" && t.energy && !(t.hiddenUntil > Date.now())) {
+      var sb = el("button", "btn-big"); sb.type = "button"; sb.innerHTML = PLAY;
+      sb.appendChild(document.createTextNode((t.steps || []).length ? "Start, one step at a time" : "Start"));
+      sb.onclick = function () { openFocus(openId); };
+      ss.appendChild(sb);
+    }
+    renderRepeat(t);
+    var steps = t.steps || [];
+    var ol = $("steps"); ol.textContent = "";
+    $("stepCount").textContent = steps.length ? steps.filter(function (s) { return s.done; }).length + " of " + steps.length + " done" : "";
+    var sp = $("sheetProgress"); sp.textContent = "";
+    sp.hidden = steps.length < 2;
+    if (steps.length > 1) sp.appendChild(progressBar(steps.filter(function (s) { return s.done; }).length, steps.length, t.energy));
+    if (!steps.length) {
+      var e = el("li", "hint", "No steps yet. Break this into small pieces, as small as \"put shoes on\".");
+      e.style.padding = "12px 0"; ol.appendChild(e);
+    }
+    var rb = $("reorderBtn");
+    if (steps.length < 2) reorderMode = false;
+    rb.hidden = steps.length < 2;
+    rb.textContent = reorderMode ? "Done reordering" : "Reorder";
+    rb.setAttribute("aria-pressed", String(reorderMode));
+    ol.classList.toggle("reordering", reorderMode);
+    $("addStep").hidden = reorderMode;
+    if (reorderMode) { renderReorder(ol, steps); return; }
+    steps.forEach(function (s, i) {
+      var li = el("li", "step" + (s.done ? " done" : ""));
+      var c = el("button", "check"); c.type = "button"; c.innerHTML = CHECK;
+      c.setAttribute("aria-pressed", String(!!s.done));
+      c.setAttribute("aria-label", (s.done ? "Uncheck: " : "Check off: ") + s.text);
+      c.onclick = function () {
+        var next = steps.map(function (x, j) { return j === i ? Object.assign({}, x, { done: !x.done }) : x; });
+        setSteps(next);
+        if (next.length && next.every(function (x) { return x.done; })) flash("All steps done. Tap Done on the card when you're ready.");
+      };
+      li.appendChild(c);
+      if (stepEditing === s.id) {
+        var inp = el("input", "step-edit"); inp.type = "text"; inp.value = s.text;
+        inp.setAttribute("aria-label", "Edit step"); inp.setAttribute("enterkeyhint", "done");
+        var saved = false;
+        var commit = function () {
+          if (saved) return; saved = true; stepEditing = null;
+          var v = inp.value.trim();
+          if (v && v !== s.text) setSteps(steps.map(function (x2, j) { return j === i ? Object.assign({}, x2, { text: v }) : x2; }));
+          else renderSheet();
+        };
+        inp.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") { ev.preventDefault(); commit(); }
+          if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); saved = true; stepEditing = null; renderSheet(); }
+        });
+        inp.addEventListener("blur", commit);
+        li.appendChild(inp);
+        setTimeout(function () { inp.focus(); inp.select(); }, 0);
+      } else {
+        var tb = el("button", "step-text step-tap", s.text); tb.type = "button";
+        tb.setAttribute("aria-label", "Edit step: " + s.text);
+        tb.onclick = function () { stepEditing = s.id; renderSheet(); };
+        li.appendChild(tb);
+      }
+      var x = el("button", "step-x", "Remove"); x.type = "button";
+      x.setAttribute("aria-label", "Remove step: " + s.text);
+      x.onclick = function () { setSteps(steps.filter(function (_, j) { return j !== i; })); };
+      li.appendChild(x);
+      ol.appendChild(li);
+    });
+
+    // optional step suggestions
+    var area = $("sugArea"); area.textContent = "";
+    if (stepSug === "loading") { area.appendChild(el("div", "hint", "Thinking of steps…")); }
+    else if (stepSug && stepSug.error) { area.appendChild(el("div", "hint", stepSug.error)); }
+    else if (stepSug && stepSug.list) {
+      var box = el("div", "sug-box");
+      box.appendChild(el("div", "hint", "Suggested steps. Remove any you don't want, then add the rest."));
+      var sl = el("ol", "sug-list");
+      stepSug.list.forEach(function (s, i) {
+        var li = el("li"); li.appendChild(el("span", null, s));
+        var rm = el("button", "step-x", "Remove"); rm.type = "button";
+        rm.setAttribute("aria-label", "Remove suggested step: " + s);
+        rm.onclick = function () {
+          stepSug.list = stepSug.list.filter(function (_, j) { return j !== i; });
+          if (!stepSug.list.length) stepSug = null;
+          renderSheet();
+        };
+        li.appendChild(rm); sl.appendChild(li);
+      });
+      box.appendChild(sl);
+      var r = el("div", "row-gap");
+      var add = el("button", "btn-done", stepSug.list.length === 1 ? "Add this step" : "Add these " + stepSug.list.length); add.type = "button";
+      add.onclick = function () {
+        var cur = (state.tasks[openId].steps || []).slice();
+        stepSug.list.forEach(function (s) { cur.push({ id: newId(), text: s, done: false }); });
+        stepSug = null; setSteps(cur);
+      };
+      var no = el("button", "link", "No thanks"); no.type = "button";
+      no.onclick = function () { stepSug = null; renderSheet(); };
+      r.appendChild(add); r.appendChild(no); box.appendChild(r);
+      area.appendChild(box);
+    } else if (sampleApi) {
+      var sb = el("button", "chip ask", "Suggest steps"); sb.type = "button";
+      sb.onclick = suggestSteps;
+      area.appendChild(sb);
+    }
+  }
+
+  // ---------- reordering steps ----------
+  var reorderMode = false, stepEditing = null;
+  var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></svg>';
+  var UP = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10l4-4 4 4"/></svg>';
+  var DOWN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
+
+  function moveStep(steps, from, to) {
+    if (to < 0 || to >= steps.length || from === to) return;
+    var next = steps.slice(); var item = next.splice(from, 1)[0]; next.splice(to, 0, item);
+    setSteps(next);
+  }
+
+  function renderReorder(ol, steps) {
+    steps.forEach(function (s, i) {
+      var li = el("li", "step reorder" + (s.done ? " done" : ""));
+      li.dataset.i = i;
+      var grip = el("span", "grip"); grip.innerHTML = GRIP; grip.setAttribute("aria-hidden", "true");
+      li.appendChild(grip);
+      li.appendChild(el("span", "step-text", s.text));
+      var up = el("button", "arrow"); up.type = "button"; up.innerHTML = UP;
+      up.setAttribute("aria-label", "Move up: " + s.text); up.disabled = i === 0;
+      up.onclick = function () { moveStep(steps, i, i - 1); focusArrow(i - 1, "up"); };
+      var dn = el("button", "arrow"); dn.type = "button"; dn.innerHTML = DOWN;
+      dn.setAttribute("aria-label", "Move down: " + s.text); dn.disabled = i === steps.length - 1;
+      dn.onclick = function () { moveStep(steps, i, i + 1); focusArrow(i + 1, "down"); };
+      li.appendChild(up); li.appendChild(dn);
+      grip.addEventListener("pointerdown", function (ev) { startDrag(ev, li, ol, steps); });
+      ol.appendChild(li);
+    });
+  }
+  function focusArrow(i, dir) {
+    var li = $("steps").children[i]; if (!li) return;
+    var btns = li.querySelectorAll(".arrow"); var b = dir === "up" ? btns[0] : btns[1];
+    if (b && !b.disabled) b.focus(); else if (btns[0] && !btns[0].disabled) btns[0].focus(); else if (btns[1]) btns[1].focus();
+  }
+
+  // drag by the grip: the row follows your finger, others make room, order saves on release
+  function startDrag(ev, li, ol, steps) {
+    ev.preventDefault();
+    var from = +li.dataset.i, rows = Array.prototype.slice.call(ol.children);
+    var startY = ev.clientY, h = li.getBoundingClientRect().height, to = from;
+    var mids = rows.map(function (r) { var b = r.getBoundingClientRect(); return b.top + b.height / 2; });
+    li.classList.add("dragging");
+    try { li.setPointerCapture(ev.pointerId); } catch (e) {}
+    function move(e) {
+      var dy = e.clientY - startY;
+      li.style.transform = "translateY(" + dy + "px)";
+      var y = mids[from] + dy, t = 0;
+      for (var k = 0; k < mids.length; k++) if (k !== from && y > mids[k]) t++;
+      to = t;
+      rows.forEach(function (r, k) {
+        if (k === from) return;
+        var shift = 0;
+        if (from < to && k > from && k <= to) shift = -h;
+        if (from > to && k < from && k >= to) shift = h;
+        r.style.transform = shift ? "translateY(" + shift + "px)" : "";
+      });
+    }
+    function end() {
+      li.removeEventListener("pointermove", move);
+      li.removeEventListener("pointerup", end);
+      li.removeEventListener("pointercancel", end);
+      rows.forEach(function (r) { r.style.transform = ""; });
+      li.classList.remove("dragging");
+      if (to !== from) moveStep(steps, from, to); else renderSheet();
+    }
+    li.addEventListener("pointermove", move);
+    li.addEventListener("pointerup", end);
+    li.addEventListener("pointercancel", end);
+  }
+
+  async function suggestSteps() {
+    var id = openId, t = state.tasks[id];
+    stepSug = "loading"; renderSheet();
+    try {
+      var have = (t.steps || []).map(function (s) { return s.text; });
+      var prompt = "Break this to-do item into small, concrete, physical steps that make it easy to start.\n" +
+        "Item: " + JSON.stringify(t.text) + "\n" +
+        (have.length ? "Steps already listed (don't repeat them, continue from them): " + JSON.stringify(have) + "\n" : "") +
+        "Give 3 to 6 steps. Each step is one plain action under 8 words, starting with a verb. The first step should be tiny.\n" +
+        'Reply with JSON only: {"steps": ["...", "..."]}';
+      var r = await sampleApi.json(prompt, { modelTier: "quick" });
+      var list = (r && Array.isArray(r.steps) ? r.steps : []).filter(function (s) { return typeof s === "string" && s.trim(); }).slice(0, 6).map(function (s) { return s.trim().slice(0, 120); });
+      if (!list.length) throw { code: "bad_answer" };
+      if (openId === id) stepSug = { list: list };
+    } catch (e) {
+      if (e && e.code === "not_granted") { sampleApi = null; stepSug = null; flash("Suggestions are turned off. You can still add steps yourself."); }
+      else if (openId === id) stepSug = { error: "Couldn't get suggestions. You can still add steps yourself." };
+    }
+    renderSheet();
+  }
+
+  $("addStep").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var v = $("stepInput").value.trim(); if (!v || !openId) return;
+    var cur = (state.tasks[openId].steps || []).slice();
+    cur.push({ id: newId(), text: v, done: false });
+    setSteps(cur); $("stepInput").value = ""; $("stepInput").focus();
+  });
+  $("notes").addEventListener("input", function () {
+    $("notesState").textContent = "";
+    clearTimeout(notesTimer); notesTimer = setTimeout(saveNotes, 700);
+  });
+  $("notes").addEventListener("blur", saveNotes);
+  $("sheetClose").addEventListener("click", closeSheet);
+  $("reorderBtn").addEventListener("click", function () { reorderMode = !reorderMode; renderSheet(); });
+  function saveTitle() {
+    if (!openId || !state.tasks[openId]) return;
+    var v = $("sheetTitle").value.trim();
+    if (!v) { $("sheetTitle").value = state.tasks[openId].text; return; }
+    if (v !== state.tasks[openId].text) update(openId, { text: v });
+  }
+  $("sheetTitle").addEventListener("blur", saveTitle);
+  $("sheetTitle").addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") { ev.preventDefault(); this.blur(); }
+  });
+  $("sheetBg").addEventListener("click", function (ev) { if (ev.target === this) closeSheet(); });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape") return;
+    if (focusId) closeFocus(); else if (openId) closeSheet();
+  });
+  $("focusExit").addEventListener("click", closeFocus);
+  $("searchBtn").addEventListener("click", function () { setSearch(!searchOpen); });
+  $("searchClose").addEventListener("click", function () { setSearch(false); $("searchBtn").focus(); });
+  $("searchInput").addEventListener("input", renderSearch);
+  $("searchInput").addEventListener("keydown", function (ev) { if (ev.key === "Escape") { ev.stopPropagation(); setSearch(false); $("searchBtn").focus(); } });
+  $("backupBtn").addEventListener("click", saveBackup);
+  $("restoreBtn").addEventListener("click", function () { $("restoreFile").value = ""; $("restoreFile").click(); });
+  $("restoreFile").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var note = $("backupNote");
+    f.text().then(function (txt) {
+      var res = restoreFrom(txt);
+      note.textContent = "Restored " + res.added + " item" + (res.added === 1 ? "" : "s") + (res.skipped ? ". Skipped " + res.skipped + " already here." : ".");
+    }).catch(function () { note.textContent = "That file isn't a Thought Box copy. Pick a file from Save a copy."; });
+  });
+
+  // ---------- voice input ----------
+  (function setupMics() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    var active = null;
+    Array.prototype.forEach.call(document.querySelectorAll(".mic"), function (btn) {
+      var input = $(btn.dataset.for);
+      btn.hidden = false; btn.parentNode.classList.add("has-mic");
+      btn.addEventListener("click", function () {
+        if (active) { active.stop(); return; }
+        var rec; try { rec = new SR(); } catch (e) { return; }
+        var base = input.value ? input.value.replace(/\s+$/, "") + " " : "";
+        rec.lang = navigator.language || "en-US"; rec.interimResults = true; rec.continuous = false;
+        rec.onresult = function (ev) {
+          var txt = ""; for (var i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript;
+          input.value = base + txt;
+        };
+        rec.onerror = function (ev) {
+          if (ev.error === "not-allowed" || ev.error === "service-not-allowed") flash("Microphone isn't allowed. Use the mic on your keyboard instead.");
+        };
+        rec.onend = function () { active = null; btn.classList.remove("listening"); btn.setAttribute("aria-pressed", "false"); input.focus(); };
+        try { rec.start(); active = rec; btn.classList.add("listening"); btn.setAttribute("aria-pressed", "true"); }
+        catch (e) { active = null; }
+      });
+    });
+  })();
+
+  // ---------- offline support ----------
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+
+  // ---------- ideas tab ----------
+  var tab = "tasks";
+  function setTab(name) {
+    tab = name;
+    $("tabTasks").setAttribute("aria-selected", String(name === "tasks"));
+    $("tabIdeas").setAttribute("aria-selected", String(name === "ideas"));
+    $("tabProgress").setAttribute("aria-selected", String(name === "progress"));
+    $("tasksPane").hidden = name !== "tasks";
+    $("ideasPane").hidden = name !== "ideas";
+    $("progressPane").hidden = name !== "progress";
+    if (name === "progress") renderProgress();
+    try { localStorage.setItem("next-three-tab", name); } catch (e) {}
+  }
+
+  function renderIdeas(ideas) {
+    ideas.sort(function (a, b) { return b.created - a.created; });
+    $("ideaCount").textContent = ideas.length ? "(" + ideas.length + ")" : "";
+    var box = $("ideas"); box.textContent = "";
+    if (!ideas.length) {
+      var e = el("div", "empty");
+      e.innerHTML = "<strong>No ideas saved yet.</strong> Use the Ideas box for anything you want to keep that isn't a to-do: a book to read, a gift idea, a thought from the shower.";
+      box.appendChild(e);
+      return;
+    }
+    ideas.forEach(function (t) {
+      var c = el("article", "card idea-card");
+      c.appendChild(openButton(t, "card-text"));
+      var row = el("div", "card-row");
+      row.appendChild(el("span", "idea-meta", "Saved " + new Date(t.created).toLocaleDateString(undefined, { month: "short", day: "numeric" })));
+      var acts = el("div", "actions");
+      var rm = el("button", "btn-ghost", "Remove"); rm.type = "button";
+      rm.setAttribute("aria-label", "Remove idea: " + t.text);
+      rm.onclick = function () { remove(t.id); };
+      var mk = el("button", "btn-ghost", "Make it a task"); mk.type = "button";
+      mk.setAttribute("aria-label", "Move to task inbox: " + t.text);
+      mk.onclick = function () {
+        update(t.id, { kind: "task", energy: null, status: "open", bumped: 0 });
+        flash("Moved to your task inbox.");
+      };
+      acts.appendChild(rm); acts.appendChild(mk); row.appendChild(acts);
+      c.appendChild(row); box.appendChild(c);
+    });
+  }
+
+
+  // ---------- progress tab ----------
+  var period = "weeks", selBucket = null;
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function weekStart(ms) { var d = new Date(ms); d.setHours(0,0,0,0); var wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return d; }
+  function monthStart(ms) { var d = new Date(ms); return new Date(d.getFullYear(), d.getMonth(), 1); }
+
+  function fmtDur(ms) {
+    if (!(ms >= 0)) return "–";
+    var m = ms / 60000;
+    if (m < 60) return Math.max(1, Math.round(m)) + " min";
+    var h = m / 60;
+    if (h < 48) return (h < 10 ? Math.round(h * 10) / 10 : Math.round(h)) + " hr" + (Math.round(h) === 1 ? "" : "s");
+    var d = h / 24;
+    return (d < 10 ? Math.round(d * 10) / 10 : Math.round(d)) + " days";
+  }
+  function median(arr) { if (!arr.length) return NaN; var a = arr.slice().sort(function (x, y) { return x - y; }); var m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; }
+
+  function buckets(done) {
+    var out = [], now = Date.now(), n = period === "weeks" ? 8 : 6;
+    for (var i = n - 1; i >= 0; i--) {
+      var start, end, label, long;
+      if (period === "weeks") {
+        start = weekStart(now); start.setDate(start.getDate() - 7 * i);
+        end = new Date(start); end.setDate(end.getDate() + 7);
+        label = MONTHS[start.getMonth()] + " " + start.getDate();
+        long = i === 0 ? "This week" : "Week of " + label;
+      } else {
+        var t = new Date(); start = new Date(t.getFullYear(), t.getMonth() - i, 1);
+        end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+        label = MONTHS[start.getMonth()];
+        long = i === 0 ? "This month" : MONTHS[start.getMonth()] + " " + start.getFullYear();
+      }
+      var b = { key: start.getTime(), label: label, long: long, c: [0, 0, 0, 0] };
+      done.forEach(function (t) { if (t.doneAt >= start.getTime() && t.doneAt < end.getTime()) b.c[t.energy || 0]++; });
+      b.total = b.c[1] + b.c[2] + b.c[3];
+      out.push(b);
+    }
+    return out;
+  }
+
+  function niceMax(v) { if (v <= 4) return 4; var steps = [6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 200, 400, 500]; for (var i = 0; i < steps.length; i++) if (v <= steps[i]) return steps[i]; return Math.ceil(v / 100) * 100; }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function sv(tag, attrs, text) { var e = document.createElementNS(SVGNS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+  // bar segment: rounded top corners only when it's the top of the stack
+  function segPath(x, y, w, h, r) {
+    if (r <= 0) return "M" + x + "," + (y + h) + "V" + y + "H" + (x + w) + "V" + (y + h) + "Z";
+    r = Math.min(r, w / 2, h);
+    return "M" + x + "," + (y + h) + "V" + (y + r) + "Q" + x + "," + y + " " + (x + r) + "," + y + "H" + (x + w - r) + "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) + "V" + (y + h) + "Z";
+  }
+
+  function readoutFor(b) {
+    var r = $("readout"); r.textContent = "";
+    var strong = el("b", null, b.long + ": " + b.total + " done");
+    r.appendChild(strong);
+    if (b.total) r.appendChild(document.createTextNode("  ·  Low " + b.c[1] + " · Medium " + b.c[2] + " · High " + b.c[3]));
+  }
+
+  function renderProgress() {
+    if (!$("progressPane") || $("progressPane").hidden) return;
+    $("segWeeks").setAttribute("aria-pressed", String(period === "weeks"));
+    $("segMonths").setAttribute("aria-pressed", String(period === "months"));
+    var done = list().filter(function (t) { return t.kind === "task" && t.status === "done" && t.doneAt; });
+    var wk = weekStart(Date.now()).getTime();
+
+    // counters
+    var tiles = $("tiles"); tiles.textContent = "";
+    [1, 2, 3].forEach(function (n) {
+      var all = done.filter(function (t) { return t.energy === n; });
+      var week = all.filter(function (t) { return t.doneAt >= wk; }).length;
+      var tl = el("div", "tile");
+      var k = el("div", "k"); k.appendChild(el("i", "sw c" + n)); k.appendChild(document.createTextNode(LABEL[n])); tl.appendChild(k);
+      tl.appendChild(el("div", "v", String(all.length)));
+      tl.appendChild(el("div", "s", week + " this week"));
+      tiles.appendChild(tl);
+    });
+
+    // chart
+    var bs = buckets(done);
+    var box = $("chart"); box.textContent = "";
+    var W = Math.max(260, box.clientWidth || 320), H = 190, padL = 26, padB = 22, padT = 18;
+    var plotW = W - padL, plotH = H - padB - padT;
+    var maxV = niceMax(Math.max.apply(null, bs.map(function (b) { return b.total; })));
+    var svg = sv("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Tasks completed per " + (period === "weeks" ? "week" : "month") + ", stacked by energy level" });
+    var ticks = [0, maxV / 2, maxV];
+    ticks.forEach(function (v) {
+      var y = padT + plotH - (v / maxV) * plotH;
+      svg.appendChild(sv("line", { x1: padL, x2: W, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": v === 0 ? 1.5 : 1 }));
+      svg.appendChild(sv("text", { x: padL - 6, y: y + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }, String(v)));
+    });
+    var slot = plotW / bs.length, bw = Math.min(28, slot * 0.56);
+    if (selBucket == null || !bs.some(function (b) { return b.key === selBucket; })) selBucket = bs[bs.length - 1].key;
+    bs.forEach(function (b, i) {
+      var cx = padL + slot * i + slot / 2, x = cx - bw / 2;
+      var g = sv("g", { "class": "bar-hit" + (b.key === selBucket ? " sel" : ""), tabindex: 0, role: "button", "aria-label": b.long + ": " + b.total + " done. Low " + b.c[1] + ", Medium " + b.c[2] + ", High " + b.c[3] });
+      g.appendChild(sv("rect", { "class": "hit-bg", x: padL + slot * i + 2, y: padT, width: slot - 4, height: plotH, rx: 6, fill: "transparent" }));
+      var y0 = padT + plotH, topLevel = b.c[3] ? 3 : b.c[2] ? 2 : 1;
+      [1, 2, 3].forEach(function (n) {
+        var v = b.c[n]; if (!v) return;
+        var h = (v / maxV) * plotH, gap = 2;
+        var y = y0 - h;
+        var drawH = Math.max(1, h - (n === topLevel ? 0 : gap));
+        g.appendChild(sv("path", { d: segPath(x, n === topLevel ? y : y + gap, bw, n === topLevel ? h : drawH, n === topLevel ? 4 : 0), fill: "var(--c" + n + ")" }));
+        y0 = y;
+      });
+      if (b.total) svg.appendChild(sv("text", { x: cx, y: Math.max(11, y0 - 5), "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, String(b.total)));
+      var showLabel = period === "months" || i % 2 === (bs.length - 1) % 2;
+      if (showLabel) svg.appendChild(sv("text", { x: cx, y: H - 5, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, b.label));
+      var pick = function () { selBucket = b.key; Array.prototype.forEach.call(svg.querySelectorAll(".bar-hit"), function (n) { n.classList.remove("sel"); }); g.classList.add("sel"); readoutFor(b); };
+      g.addEventListener("click", pick);
+      g.addEventListener("mouseenter", pick);
+      g.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(); } });
+      svg.appendChild(g);
+    });
+    box.appendChild(svg);
+    readoutFor(bs.filter(function (b) { return b.key === selBucket; })[0]);
+
+    // table view
+    var tbl = el("table"), thead = el("thead"), hr = el("tr");
+    [period === "weeks" ? "Week" : "Month", "Low", "Medium", "High", "Total"].forEach(function (h) { hr.appendChild(el("th", null, h)); });
+    thead.appendChild(hr); tbl.appendChild(thead);
+    var tb = el("tbody");
+    bs.slice().reverse().forEach(function (b) {
+      var tr = el("tr");
+      [b.long, b.c[1], b.c[2], b.c[3], b.total].forEach(function (v) { tr.appendChild(el("td", null, String(v))); });
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);
+    $("chartTable").textContent = ""; $("chartTable").appendChild(tbl);
+
+    // time to finish
+    var tt = $("timeTiles"); tt.textContent = "";
+    [1, 2, 3].forEach(function (n) {
+      var durs = done.filter(function (t) { return t.energy === n && t.created; }).map(function (t) { return t.doneAt - t.created; });
+      var tl = el("div", "tile");
+      var k = el("div", "k"); k.appendChild(el("i", "sw c" + n)); k.appendChild(document.createTextNode(LABEL[n])); tl.appendChild(k);
+      tl.appendChild(el("div", "v sm", durs.length ? fmtDur(median(durs)) : "–"));
+      tl.appendChild(el("div", "s", durs.length ? "typical, from " + durs.length + " task" + (durs.length === 1 ? "" : "s") : "none yet"));
+      tt.appendChild(tl);
+    });
+    var rec = $("recent"); rec.textContent = "";
+    var recent = done.slice().sort(function (a, b) { return b.doneAt - a.doneAt; }).slice(0, 10);
+    if (!recent.length) {
+      var e = el("div", "empty");
+      e.innerHTML = "<strong>Nothing finished yet.</strong> When you tap Done on a task, it shows up here with how long it took.";
+      rec.appendChild(e);
+    }
+    recent.forEach(function (t) {
+      var r = el("div", "recent-row");
+      r.appendChild(el("span", "tag e" + t.energy, LABEL[t.energy]));
+      r.appendChild(el("span", "t", t.text));
+      var when = new Date(t.doneAt);
+      r.appendChild(el("span", "d", "took " + fmtDur(t.doneAt - t.created) + "\n" + MONTHS[when.getMonth()] + " " + when.getDate()));
+      rec.appendChild(r);
+    });
+    renderReset(done.length);
+  }
+
+  // ---------- repeat control ----------
+  function renderRepeat(t) {
+    var sec = $("repeatSec");
+    sec.hidden = t.kind !== "task";
+    if (sec.hidden) return;
+    var seg = $("repeatSeg"); seg.textContent = "";
+    var cur = REPEAT_SHORT[t.repeat] ? t.repeat : "never";
+    [["never", "Never"], ["day", "Daily"], ["week", "Weekly"], ["month", "Monthly"]].forEach(function (o) {
+      var b = el("button", null, o[1]); b.type = "button";
+      b.setAttribute("aria-pressed", String(cur === o[0]));
+      b.onclick = function () { update(openId, { repeat: o[0] === "never" ? null : o[0] }); };
+      seg.appendChild(b);
+    });
+    var note = "";
+    if (t.hiddenUntil > Date.now()) note = "Resting until " + new Date(t.hiddenUntil).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }) + ".";
+    else if (cur !== "never") note = "When you tap Done, a fresh copy comes back " + (cur === "day" ? "tomorrow" : cur === "week" ? "in a week" : "next month") + ", with its steps unchecked.";
+    $("repeatNote").textContent = note;
+  }
+
+  // ---------- search ----------
+  var searchOpen = false;
+  function setSearch(open) {
+    searchOpen = open;
+    $("searchBar").hidden = !open;
+    $("searchBtn").setAttribute("aria-expanded", String(open));
+    if (open) { $("searchInput").focus(); }
+    else { $("searchInput").value = ""; }
+    renderSearch();
+  }
+  function renderSearch() {
+    var q = searchOpen ? $("searchInput").value.trim().toLowerCase() : "";
+    var active = !!q;
+    $("searchPane").hidden = !active;
+    document.querySelector(".tabs").hidden = active;
+    if (active) { $("tasksPane").hidden = true; $("ideasPane").hidden = true; $("progressPane").hidden = true; }
+    else { setTab(tab || "tasks"); }
+    if (!active) return;
+    var now = Date.now(), out = [];
+    list().forEach(function (t) {
+      if (t.kind !== "task" && t.kind !== "idea") return;
+      var where = null;
+      if ((t.text || "").toLowerCase().indexOf(q) >= 0) where = "";
+      else {
+        var st = (t.steps || []).filter(function (x) { return x.text.toLowerCase().indexOf(q) >= 0; })[0];
+        if (st) where = "Step: " + st.text;
+        else if ((t.notes || "").toLowerCase().indexOf(q) >= 0) {
+          var n = t.notes, i = n.toLowerCase().indexOf(q), a = Math.max(0, i - 30);
+          where = "Notes: " + (a ? "…" : "") + n.slice(a, i + q.length + 40).replace(/\s+/g, " ") + (i + q.length + 40 < n.length ? "…" : "");
+        }
+      }
+      if (where === null) return;
+      var kind = t.kind === "idea" ? "Idea" : t.status === "done" ? "Done" : t.hiddenUntil > now ? "Later" : !t.energy ? "Inbox" : "Task";
+      out.push({ t: t, where: where, kind: kind, rank: kind === "Done" ? 2 : 0 });
+    });
+    out.sort(function (a, b) { return a.rank - b.rank || (b.t.created || 0) - (a.t.created || 0); });
+    $("resultCount").textContent = out.length ? out.length + " found" : "";
+    var box = $("results"); box.textContent = "";
+    if (!out.length) { box.appendChild(el("div", "empty", "Nothing matches that yet.")); return; }
+    out.slice(0, 60).forEach(function (r) {
+      var b = el("button", "result"); b.type = "button";
+      b.appendChild(el("span", "kind" + (r.kind === "Idea" ? " idea" : ""), r.kind));
+      var m = el("span", "r-main");
+      m.appendChild(el("span", "r-text", r.t.text));
+      if (r.where) m.appendChild(el("span", "r-where", r.where));
+      b.appendChild(m);
+      b.onclick = function () { openSheet(r.t.id); };
+      box.appendChild(b);
+    });
+  }
+
+  // ---------- backup ----------
+  function csvCell(v) { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function fmtDate(ms) { if (!ms) return ""; var d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function buildCsv() {
+    var rows = [["Type", "Text", "Energy", "Status", "Added", "Finished", "Repeats", "Steps", "Notes"]];
+    list().filter(function (t) { return t.kind === "task" || t.kind === "idea"; })
+      .sort(function (a, b) { return (a.created || 0) - (b.created || 0); })
+      .forEach(function (t) {
+        var status = t.kind === "idea" ? "" : t.status === "done" ? "Done" : t.hiddenUntil > Date.now() ? "Comes back later" : t.energy ? "Open" : "Inbox";
+        rows.push([t.kind === "idea" ? "Idea" : "Task", t.text, LABEL[t.energy] || "", status, fmtDate(t.created), fmtDate(t.doneAt), REPEAT_SHORT[t.repeat] || "",
+          (t.steps || []).map(function (s) { return (s.done ? "[x] " : "[ ] ") + s.text; }).join(" | "), t.notes || ""]);
+      });
+    return "﻿" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+  }
+  async function saveBackup() {
+    var note = $("backupNote"); note.textContent = "";
+    var d = new Date(), name = "thought-box-backup-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".csv";
+    var blob = new Blob([buildCsv()], { type: "text/csv" });
+    // iPhone: the share sheet offers "Save to Files". Elsewhere: a normal download.
+    try {
+      var file = new File([blob], name, { type: "text/csv" });
+      if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        await navigator.share({ files: [file], title: "Thought Box backup" });
+        note.textContent = "Copy ready. Choose Save to Files to keep it.";
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") { note.textContent = "Not saved."; return; }
+    }
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    note.textContent = "Saved " + name + ".";
+  }
+
+  function parseCsv(text) {
+    text = text.replace(/^﻿/, "");
+    var rows = [], row = [], cell = "", q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ",") { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(cell); rows.push(row); row = []; cell = "";
+      } else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+  }
+  function parseDate(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec((v || "").trim());
+    return m ? new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime() : 0;
+  }
+  function restoreFrom(text) {
+    var rows = parseCsv(text);
+    var head = (rows.shift() || []).map(function (h) { return h.trim().toLowerCase(); });
+    var col = function (name) { return head.indexOf(name); };
+    if (col("type") < 0 || col("text") < 0) throw new Error("not a Thought Box copy");
+    var LEVEL = { low: 1, medium: 2, high: 3, some: 2, full: 3 };
+    var REP = { daily: "day", weekly: "week", monthly: "month" };
+    var seen = {};
+    list().forEach(function (t) { seen[(t.kind || "") + "|" + t.text + "|" + Math.floor((t.created || 0) / 60000)] = true; });
+    var added = 0, skipped = 0, now = Date.now();
+    rows.forEach(function (r) {
+      var g = function (n) { var i = col(n); return i < 0 ? "" : (r[i] || "").trim(); };
+      var kind = g("type").toLowerCase() === "idea" ? "idea" : "task";
+      var text = g("text"); if (!text) return;
+      var created = parseDate(g("added")) || now;
+      var key = kind + "|" + text + "|" + Math.floor(created / 60000);
+      if (seen[key]) { skipped++; return; }
+      seen[key] = true;
+      var item = { kind: kind, text: text, created: created };
+      var notesIdx = col("notes"); if (notesIdx >= 0 && r[notesIdx]) item.notes = r[notesIdx];
+      if (kind === "task") {
+        var st = g("status").toLowerCase();
+        item.energy = LEVEL[g("energy").toLowerCase()] || null;
+        item.bumped = 0;
+        item.status = st === "done" ? "done" : "open";
+        if (item.status === "done") item.doneAt = parseDate(g("finished")) || created;
+        if (REP[g("repeats").toLowerCase()]) item.repeat = REP[g("repeats").toLowerCase()];
+        if (st.indexOf("later") >= 0 && created > now) item.hiddenUntil = created;
+        var steps = g("steps");
+        if (steps) item.steps = steps.split(" | ").map(function (x) {
+          var done = /^\[x\]\s*/i.test(x);
+          return { id: newId(), text: x.replace(/^\[[ x]\]\s*/i, ""), done: done };
+        }).filter(function (x) { return x.text; });
+      }
+      var id = newId(); state.tasks[id] = item; persistDoc(id, item); added++;
+    });
+    render();
+    return { added: added, skipped: skipped };
+  }
+
+  // ---------- focus mode ----------
+  var focusId = null, focusReturn = null;
+  var timer = null; // { total, end, ended, iv, energy }
+  var wakeLock = null, audioCtx = null;
+
+  function openFocus(id) {
+    focusReturn = document.activeElement;
+    if (openId) closeSheet();
+    focusId = id;
+    $("focus").hidden = false;
+    document.body.style.overflow = "hidden";
+    renderFocus(); renderTimer();
+    $("focusExit").focus();
+  }
+  function closeFocus() {
+    if (!focusId) return;
+    focusId = null; stopTimer(true);
+    $("focus").hidden = true;
+    document.body.style.overflow = "";
+    render();
+    if (focusReturn && focusReturn.isConnected) try { focusReturn.focus(); } catch (e) {}
+  }
+  function renderFocus() {
+    if (!focusId) return;
+    var t = state.tasks[focusId];
+    if (!t || t.status !== "open") { closeFocus(); return; }
+    var steps = t.steps || [];
+    var idx = steps.findIndex(function (s) { return !s.done; });
+    var doneCount = steps.filter(function (s) { return s.done; }).length;
+    $("focusTitle").textContent = steps.length ? t.text : "";
+    var prog = $("focusProg"); prog.textContent = "";
+    if (steps.length > 1) prog.appendChild(progressBar(doneCount, steps.length, t.energy));
+    var acts = $("focusActions"); acts.textContent = "";
+    renderFocusSteps(t, steps, idx);
+    var big;
+    if (steps.length && idx >= 0) {
+      $("focusCount").textContent = "Step " + (idx + 1) + " of " + steps.length;
+      $("focusStep").textContent = steps[idx].text;
+      big = el("button", "btn-big"); big.type = "button"; big.innerHTML = CHECK; big.appendChild(document.createTextNode("Done with this step"));
+      big.onclick = function () {
+        var next = steps.map(function (x, j) { return j === idx ? Object.assign({}, x, { done: true }) : x; });
+        update(focusId, { steps: next });
+      };
+      acts.appendChild(big);
+    } else {
+      $("focusCount").textContent = steps.length ? "All " + steps.length + " steps done" : "Focus on";
+      $("focusStep").textContent = steps.length ? "Nice work. Ready to mark it done?" : t.text;
+      big = el("button", "btn-big"); big.type = "button"; big.innerHTML = CHECK; big.appendChild(document.createTextNode("Mark task done"));
+      big.onclick = function () { var id = focusId; closeFocus(); completeTask(id); };
+      acts.appendChild(big);
+      var notYet = el("button", "link", "Not yet"); notYet.type = "button";
+      notYet.onclick = closeFocus;
+      acts.appendChild(notYet);
+    }
+  }
+
+  function renderFocusSteps(t, steps, idx) {
+    var box = $("focusSteps"); box.textContent = "";
+    box.hidden = !steps.length;
+    if (!steps.length) return;
+    box.appendChild(el("h2", null, "Steps"));
+    var ol = el("ol", "steps");
+    steps.forEach(function (s, i) {
+      var li = el("li", "step" + (s.done ? " done" : "") + (i === idx ? " current" : ""));
+      var c = el("button", "check"); c.type = "button"; c.innerHTML = CHECK;
+      c.setAttribute("aria-pressed", String(!!s.done));
+      c.setAttribute("aria-label", (s.done ? "Uncheck: " : "Check off: ") + s.text);
+      c.onclick = function () {
+        update(focusId, { steps: steps.map(function (x, j) { return j === i ? Object.assign({}, x, { done: !x.done }) : x; }) });
+      };
+      li.appendChild(c);
+      li.appendChild(el("span", "step-text", s.text));
+      if (i === idx) li.appendChild(el("span", "now-tag", "Now"));
+      ol.appendChild(li);
+    });
+    box.appendChild(ol);
+    var edit = el("button", "link", "Edit steps"); edit.type = "button";
+    edit.onclick = function () { var id = focusId; closeFocus(); openSheet(id); };
+    box.appendChild(edit);
+  }
+
+  function renderTimer() {
+    var body = $("timerBody"); body.textContent = "";
+    var t = focusId && state.tasks[focusId];
+    if (timer && !timer.ended) {
+      var bar = el("div", "timebar" + (t && t.energy ? " e" + t.energy : ""));
+      bar.setAttribute("role", "progressbar"); bar.setAttribute("aria-label", "Time left");
+      bar.setAttribute("aria-valuemin", "0"); bar.setAttribute("aria-valuemax", "100");
+      var fill = el("i"); bar.appendChild(fill); body.appendChild(bar);
+      timer.fill = fill; timer.bar = bar; tickTimer();
+      var r = el("div", "row-gap");
+      r.appendChild(el("span", "timer-note", timer.total / 60000 + " minutes, shrinking as you go."));
+      var stop = el("button", "link", "Stop timer"); stop.type = "button";
+      stop.onclick = function () { stopTimer(); renderTimer(); };
+      r.appendChild(stop); body.appendChild(r);
+      return;
+    }
+    if (timer && timer.ended) body.appendChild(el("div", "timer-note", "Time's up. Keep going, or take a break."));
+    else body.appendChild(el("div", "timer-note", "Optional. A bar shrinks while you work. No countdown numbers."));
+    var chips = el("div", "timer-chips");
+    [5, 10, 15, 25].forEach(function (m) {
+      var b = el("button", null, m + " min"); b.type = "button";
+      b.setAttribute("aria-label", "Start a " + m + " minute timer");
+      b.onclick = function () { startTimer(m); };
+      chips.appendChild(b);
+    });
+    body.appendChild(chips);
+  }
+  function startTimer(min) {
+    stopTimer(true);
+    timer = { total: min * 60000, end: Date.now() + min * 60000, ended: false };
+    try { var AC = window.AudioContext || window.webkitAudioContext; if (AC && !audioCtx) audioCtx = new AC(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); } catch (e) {}
+    requestWake();
+    timer.iv = setInterval(tickTimer, 1000);
+    renderTimer();
+  }
+  function tickTimer() {
+    if (!timer || timer.ended) return;
+    var left = Math.max(0, timer.end - Date.now());
+    var pct = left / timer.total * 100;
+    if (timer.fill) timer.fill.style.width = pct + "%";
+    if (timer.bar) timer.bar.setAttribute("aria-valuenow", String(Math.round(pct)));
+    if (left <= 0) { clearInterval(timer.iv); timer.ended = true; releaseWake(); chime(); renderTimer(); }
+  }
+  function stopTimer(silent) {
+    if (timer) clearInterval(timer.iv);
+    timer = null; releaseWake();
+  }
+  function chime() {
+    if (!audioCtx) return;
+    try {
+      [660, 880].forEach(function (f, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), t0 = audioCtx.currentTime + i * 0.35;
+        o.type = "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+        o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t0 + 1);
+      });
+    } catch (e) {}
+  }
+  async function requestWake() {
+    try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { wakeLock = null; }
+  }
+  function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && timer && !timer.ended) { tickTimer(); requestWake(); }
+  });
+
+  // ---------- reset progress ----------
+  var resetStage = "idle", resetBackup = null, resetTimer = null;
+  function renderReset(doneCount) {
+    var area = $("resetArea"); area.textContent = "";
+    if (resetStage === "confirm") {
+      var box = el("div", "reset-box");
+      box.appendChild(el("div", null, "Clear all " + doneCount + " finished task" + (doneCount === 1 ? "" : "s") + " from your progress? The counters, chart and times all start over. Open tasks and ideas aren't affected."));
+      var r = el("div", "row-gap");
+      var yes = el("button", "btn-danger", "Yes, reset"); yes.type = "button";
+      yes.onclick = doReset;
+      var no = el("button", "btn-ghost", "Cancel"); no.type = "button";
+      no.onclick = function () { resetStage = "idle"; renderProgress(); };
+      r.appendChild(yes); r.appendChild(no); box.appendChild(r);
+      area.appendChild(box);
+      yes.focus();
+    } else if (resetStage === "done") {
+      var r2 = el("div", "row-gap");
+      r2.appendChild(el("span", "small", "Progress reset."));
+      var u = el("button", "link", "Undo"); u.type = "button";
+      u.onclick = undoReset;
+      r2.appendChild(u); area.appendChild(r2);
+    } else if (doneCount) {
+      var b = el("button", "btn-ghost", "Reset progress"); b.type = "button";
+      b.onclick = function () { resetStage = "confirm"; renderProgress(); };
+      area.appendChild(b);
+    }
+  }
+  function doReset() {
+    resetBackup = {};
+    Object.keys(state.tasks).forEach(function (id) {
+      var t = state.tasks[id];
+      if (t.kind === "task" && t.status === "done") { resetBackup[id] = t; delete state.tasks[id]; removeDoc(id); }
+    });
+    resetStage = "done"; selBucket = null; render();
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(function () { resetStage = "idle"; resetBackup = null; renderProgress(); }, 12000);
+  }
+  function undoReset() {
+    clearTimeout(resetTimer);
+    if (resetBackup) Object.keys(resetBackup).forEach(function (id) { state.tasks[id] = resetBackup[id]; persistDoc(id, resetBackup[id]); });
+    resetBackup = null; resetStage = "idle"; render();
+  }
+
+  // ---------- wiring ----------
+  $("capture").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var v = $("dump").value.trim();
+    if (!v) return;
+    addTask(v); $("dump").value = ""; $("dump").focus();
+    flash("Added to your inbox.");
+  });
+  $("ideaCapture").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var v = $("ideaDump").value.trim();
+    if (!v) return;
+    var id = newId();
+    var idea = { kind: "idea", text: v, created: Date.now() };
+    state.tasks[id] = idea; persistDoc(id, idea); render();
+    $("ideaDump").value = ""; $("ideaDump").focus();
+    flash("Saved to Ideas.");
+  });
+  $("tabTasks").addEventListener("click", function () { setTab("tasks"); });
+  $("tabIdeas").addEventListener("click", function () { setTab("ideas"); });
+  $("tabProgress").addEventListener("click", function () { setTab("progress"); });
+  $("segWeeks").addEventListener("click", function () { period = "weeks"; selBucket = null; renderProgress(); });
+  $("segMonths").addEventListener("click", function () { period = "months"; selBucket = null; renderProgress(); });
+  $("tableToggle").addEventListener("click", function () {
+    var t = $("chartTable"); t.hidden = !t.hidden;
+    this.setAttribute("aria-expanded", String(!t.hidden));
+    this.textContent = t.hidden ? "Show as table" : "Hide table";
+  });
+  var resizeTimer;
+  window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (tab === "progress") renderProgress(); }, 150); });
+  $("cascadeBtn").addEventListener("click", function () { setCascade(!state.cascade); });
+  $("battery").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button"); if (b) setBattery(+b.dataset.b);
+  });
+
+  try { var savedTab = localStorage.getItem("next-three-tab"); if (savedTab === "ideas" || savedTab === "progress") setTab(savedTab); } catch (e) {}
+  readCache(); render(); setSync();
+  try { $("dump").focus({ preventScroll: true }); } catch (e) {}
+  connect();
+})();
+</script>
+</body>
+</html>
