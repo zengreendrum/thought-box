@@ -1,5 +1,5 @@
 // Thought Box offline support. Bump VERSION when you upload new files.
-const VERSION = "thought-box-v1";
+const VERSION = "thought-box-v4";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
