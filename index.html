@@ -15,7 +15,7 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef1ee">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131918">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;600;700;800&display=swap">
 <style>
 /* Layout: one calm column. Capture at top, battery picker, three cards, then the unsorted inbox. Nothing else competes. */
 :root {
@@ -35,8 +35,8 @@
   --danger: #b3402a;
   --idea: #6b58a8;
   --c1: #2f68ad; --c2: #4f9e63; --c3: #d4a514; --grid: #e1e7e3;
-  --font-display: "Lexend", "Atkinson Hyperlegible", system-ui, sans-serif;
-  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 14px;
 }
 @media (prefers-color-scheme: dark) {
@@ -62,7 +62,8 @@ img { max-width: 100%; }
 body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.45; }
 .wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: flex; flex-direction: column; gap: 26px; }
 h1, h2 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
-h1 { font-size: 1.25rem; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-body); font-weight: 700; }
+h1 { font-size: 1.4rem; letter-spacing: -0.005em; }
 h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
 .sec { display: flex; flex-direction: column; gap: 12px; }
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
@@ -95,7 +96,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .capture .btn-main { flex: none; width: 5.25rem; padding: 0; }
 .capture.idea .btn-main { background: var(--idea); color: var(--accent-ink); }
 .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1.5px solid var(--line); margin-top: -8px; }
-.tabs button { border: 0; background: none; padding: 12px 8px; font-family: var(--font-display); font-weight: 500; font-size: 1rem; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1.5px; }
+.tabs button { border: 0; background: none; padding: 12px 8px; font-family: var(--font-body); font-weight: 700; font-size: 1rem; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1.5px; }
 .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
 #tabIdeas[aria-selected="true"] { border-bottom-color: var(--idea); }
 .tabs .count { font-family: var(--font-body); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -163,6 +164,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .start-btn { display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 4px 12px 4px 9px; font-size: 0.85rem; font-weight: 700; }
 .start-btn svg { width: 12px; height: 12px; }
 .repeat-badge { font-size: 0.85rem; color: var(--muted); }
+.remind-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.remind-badge svg { width: 14px; height: 14px; }
+.remind-badge.past { color: var(--danger); font-weight: 700; }
+.remind-when { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.remind-when svg { width: 18px; height: 18px; color: var(--accent); }
+.remind-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.remind-pick button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 0.95rem; }
+.remind-custom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.remind-custom input { font: inherit; padding: 9px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); min-width: 0; max-width: 100%; }
+.cal-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stale { margin-top: 2px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
 .stale-q { color: var(--muted); }
 .stale .link { font-size: 0.9rem; }
@@ -184,7 +195,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .toggle[aria-checked="true"] .toggle-knob { transform: translateX(14px); }
 @media (prefers-reduced-motion: reduce) { .toggle-track, .toggle-knob { transition: none; } }
 .bmain { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.bcount { flex: none; min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; line-height: 30px; text-align: center; font-variant-numeric: tabular-nums; background: var(--line); color: var(--fg); }
+.bcount { flex: none; min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; font-family: var(--font-body); font-size: 1.05rem; font-weight: 800; line-height: 30px; text-align: center; font-variant-numeric: tabular-nums; background: var(--line); color: var(--fg); }
 .battery button[data-b="1"] .bcount { background: var(--low-soft); color: var(--low); }
 .battery button[data-b="2"] .bcount { background: var(--med-soft); color: var(--med); }
 .battery button[data-b="3"] .bcount { background: var(--high-soft); color: var(--high); }
@@ -448,6 +459,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         <button class="btn-main" type="submit">Add</button>
       </form>
       <div id="sugArea"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="remind-h" id="remindSec">
+      <div class="sec-head"><h2 id="remind-h">Reminder</h2></div>
+      <div id="remindBody"></div>
     </section>
 
     <section class="sec" aria-labelledby="repeat-h" id="repeatSec">
@@ -847,7 +863,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     var steps = t.steps || [];
     var left = steps.filter(function (s) { return !s.done; });
     var canStart = t.kind === "task" && t.status === "open" && t.energy && !(t.hiddenUntil > Date.now());
-    if (steps.length || t.notes || canStart || REPEAT_SHORT[t.repeat]) {
+    if (steps.length || t.notes || canStart || REPEAT_SHORT[t.repeat] || (t.reminderAt && t.status === "open")) {
       var n = el("div", "next");
       if (canStart) {
         var sb = el("button", "start-btn"); sb.type = "button";
@@ -866,6 +882,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         n.appendChild(nb);
       }
       if (REPEAT_SHORT[t.repeat]) n.appendChild(el("span", "repeat-badge", "↻ " + REPEAT_SHORT[t.repeat]));
+      if (t.reminderAt && t.status === "open") {
+        var past = t.reminderAt < Date.now();
+        var rb = el("span", "remind-badge" + (past ? " past" : ""));
+        rb.innerHTML = BELL; rb.appendChild(document.createTextNode(fmtWhen(t.reminderAt)));
+        rb.setAttribute("aria-label", (past ? "Reminder was " : "Reminder ") + fmtWhen(t.reminderAt, true));
+        n.appendChild(rb);
+      }
       wrap.appendChild(n);
     }
     if (steps.length > 1) wrap.appendChild(progressBar(steps.length - left.length, steps.length, t.energy));
@@ -886,7 +909,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function openSheet(id, toNotes) {
     lastFocus = document.activeElement;
-    openId = id; stepSug = null; reorderMode = false; stepEditing = null;
+    openId = id; stepSug = null; reorderMode = false; stepEditing = null; remindPicking = false;
     var t = state.tasks[id];
     $("sheetTitle").value = t.text;
     $("notes").value = t.notes || "";
@@ -924,11 +947,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     var ss = $("sheetStart"); ss.textContent = "";
     if (t.kind === "task" && t.status === "open" && t.energy && !(t.hiddenUntil > Date.now())) {
       var sb = el("button", "btn-big"); sb.type = "button"; sb.innerHTML = PLAY;
-      sb.appendChild(document.createTextNode((t.steps || []).length ? "Start, one step at a time" : "Start"));
+      sb.appendChild(document.createTextNode("Start"));
       sb.onclick = function () { openFocus(openId); };
       ss.appendChild(sb);
     }
     renderRepeat(t);
+    renderReminder(t);
     var steps = t.steps || [];
     var ol = $("steps"); ol.textContent = "";
     $("stepCount").textContent = steps.length ? steps.filter(function (s) { return s.done; }).length + " of " + steps.length + " done" : "";
@@ -1399,6 +1423,129 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     renderReset(done.length);
   }
 
+  // ---------- reminders (handed to the phone's calendar) ----------
+  var BELL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11V7a4 4 0 0 1 8 0v4l1.2 1.5H2.8z"/><path d="M6.6 14a1.5 1.5 0 0 0 2.8 0"/></svg>';
+  var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function fmtTime(d) { var h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + (m ? ":" + String(m).padStart(2, "0") : "") + (h < 12 ? " AM" : " PM"); }
+  function fmtWhen(ms, long) {
+    var d = new Date(ms), now = new Date(), t0 = new Date(now); t0.setHours(0, 0, 0, 0);
+    var diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 86400000);
+    var day = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : diff === -1 ? "Yesterday" : (diff > 1 && diff < 7) ? DAYS[d.getDay()] : MONTHS[d.getMonth()] + " " + d.getDate();
+    return (long && diff > 1 && diff < 7 ? d.toLocaleDateString(undefined, { weekday: "long" }) : day) + ", " + fmtTime(d);
+  }
+  function quickTimes() {
+    var now = new Date(), out = [];
+    out.push(["In 1 hour", new Date(Math.ceil((now.getTime() + 3600000) / 300000) * 300000)]);
+    var eve = new Date(now); eve.setHours(19, 0, 0, 0);
+    if (eve - now > 30 * 60000) out.push(["Tonight, 7 PM", eve]);
+    var tm = new Date(now); tm.setDate(tm.getDate() + 1); tm.setHours(9, 0, 0, 0);
+    out.push(["Tomorrow, 9 AM", tm]);
+    var sat = new Date(now); sat.setDate(sat.getDate() + ((6 - sat.getDay() + 7) % 7 || 7)); sat.setHours(10, 0, 0, 0);
+    out.push(["Saturday, 10 AM", sat]);
+    return out;
+  }
+  function localInputValue(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "T" + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function setReminder(id, ms) { update(id, { reminderAt: ms || null }); }
+
+  function renderReminder(t) {
+    var tid = openId; t = Object.assign({ id: tid }, t);
+    var sec = $("remindSec");
+    sec.hidden = !(t.kind === "task" && t.status === "open");
+    if (sec.hidden) return;
+    var body = $("remindBody"); body.textContent = "";
+    if (t.reminderAt && !remindPicking) {
+      var w = el("div", "remind-when"); w.innerHTML = BELL; w.appendChild(document.createTextNode(fmtWhen(t.reminderAt, true)));
+      body.appendChild(w);
+      var cal = el("div", "cal-row");
+      var add = el("button", "btn-done", "Add to Calendar"); add.type = "button";
+      add.onclick = function () { addToCalendar(t); };
+      var g = el("a", "btn-ghost", "Google Calendar"); g.href = googleCalUrl(t); g.target = "_blank"; g.rel = "noopener";
+      g.style.textDecoration = "none"; g.style.color = "inherit";
+      cal.appendChild(add); cal.appendChild(g); body.appendChild(cal);
+      body.appendChild(el("p", "small", "Your calendar sends the alert, even when Thought Box is closed. Tap once to add it, then confirm in your calendar."));
+      var r = el("div", "row-gap");
+      var ch = el("button", "link", "Change time"); ch.type = "button";
+      ch.onclick = function () { remindPicking = true; renderSheet(); };
+      var cl = el("button", "link", "Remove reminder"); cl.type = "button";
+      cl.onclick = function () { setReminder(t.id, null); flash("Reminder removed here. Delete the event in your calendar too."); };
+      r.appendChild(ch); r.appendChild(cl); body.appendChild(r);
+      return;
+    }
+    var pick = el("div", "remind-pick");
+    quickTimes().forEach(function (q) {
+      var b = el("button", null, q[0]); b.type = "button";
+      b.onclick = function () { remindPicking = false; setReminder(t.id, q[1].getTime()); };
+      pick.appendChild(b);
+    });
+    body.appendChild(pick);
+    var cu = el("div", "remind-custom");
+    var inp = el("input"); inp.type = "datetime-local"; inp.id = "remindInput";
+    inp.setAttribute("aria-label", "Pick a date and time");
+    var base = t.reminderAt ? new Date(t.reminderAt) : quickTimes()[0][1];
+    inp.value = localInputValue(base); inp.min = localInputValue(new Date());
+    var set = el("button", "btn-ghost", "Set"); set.type = "button";
+    set.onclick = function () {
+      var v = inp.value; if (!v) return;
+      var ms = new Date(v).getTime();
+      if (!(ms > Date.now())) { flash("Pick a time that hasn't passed yet."); return; }
+      remindPicking = false; setReminder(t.id, ms);
+    };
+    cu.appendChild(inp); cu.appendChild(set); body.appendChild(cu);
+    if (remindPicking) {
+      var cancel = el("button", "link", "Cancel"); cancel.type = "button";
+      cancel.onclick = function () { remindPicking = false; renderSheet(); };
+      body.appendChild(cancel);
+    }
+  }
+  var remindPicking = false;
+
+  function icsEscape(v) { return String(v).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
+  function icsFold(line) {
+    var out = [], cur = "";
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (new TextEncoder().encode(cur + ch).length > (out.length ? 74 : 75)) { out.push(cur); cur = ""; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out.join("\r\n ");
+  }
+  function utcStamp(ms) { return new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+  function eventDetails(t) {
+    var lines = [];
+    var steps = (t.steps || []).filter(function (s) { return !s.done; });
+    if (steps.length) { lines.push("Steps:"); steps.forEach(function (s) { lines.push("- " + s.text); }); }
+    if (t.notes) { if (lines.length) lines.push(""); lines.push(t.notes.slice(0, 600)); }
+    lines.push(""); lines.push("From Thought Box");
+    return lines.join("\n");
+  }
+  function buildIcs(t) {
+    var start = t.reminderAt, end = start + 15 * 60000;
+    var L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Thought Box//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+      "BEGIN:VEVENT", "UID:" + t.id + "-" + start + "@thoughtbox", "DTSTAMP:" + utcStamp(Date.now()),
+      "DTSTART:" + utcStamp(start), "DTEND:" + utcStamp(end),
+      "SUMMARY:" + icsEscape(t.text), "DESCRIPTION:" + icsEscape(eventDetails(t)),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEscape(t.text), "TRIGGER:PT0M", "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR"];
+    return L.map(icsFold).join("\r\n") + "\r\n";
+  }
+  function icsName(t) { return (t.text.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 40) || "reminder") + ".ics"; }
+  function addToCalendar(t) {
+    var blob = new Blob([buildIcs(t)], { type: "text/calendar;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = url; a.download = icsName(t);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    flash("Opening your calendar. Tap Add to save the event.");
+  }
+  function googleCalUrl(t) {
+    var start = t.reminderAt, end = start + 15 * 60000;
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(t.text) +
+      "&dates=" + utcStamp(start) + "/" + utcStamp(end) + "&details=" + encodeURIComponent(eventDetails(t));
+  }
+
   // ---------- repeat control ----------
   function renderRepeat(t) {
     var sec = $("repeatSec");
@@ -1473,13 +1620,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function csvCell(v) { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   function fmtDate(ms) { if (!ms) return ""; var d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
   function buildCsv() {
-    var rows = [["Type", "Text", "Energy", "Status", "Added", "Finished", "Repeats", "Steps", "Notes"]];
+    var rows = [["Type", "Text", "Energy", "Status", "Added", "Finished", "Repeats", "Steps", "Notes", "Reminder"]];
     list().filter(function (t) { return t.kind === "task" || t.kind === "idea"; })
       .sort(function (a, b) { return (a.created || 0) - (b.created || 0); })
       .forEach(function (t) {
         var status = t.kind === "idea" ? "" : t.status === "done" ? "Done" : t.hiddenUntil > Date.now() ? "Comes back later" : t.energy ? "Open" : "Inbox";
         rows.push([t.kind === "idea" ? "Idea" : "Task", t.text, LABEL[t.energy] || "", status, fmtDate(t.created), fmtDate(t.doneAt), REPEAT_SHORT[t.repeat] || "",
-          (t.steps || []).map(function (s) { return (s.done ? "[x] " : "[ ] ") + s.text; }).join(" | "), t.notes || ""]);
+          (t.steps || []).map(function (s) { return (s.done ? "[x] " : "[ ] ") + s.text; }).join(" | "), t.notes || "", t.status === "open" ? fmtDate(t.reminderAt) : ""]);
       });
     return "﻿" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
   }
@@ -1553,6 +1700,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         item.status = st === "done" ? "done" : "open";
         if (item.status === "done") item.doneAt = parseDate(g("finished")) || created;
         if (REP[g("repeats").toLowerCase()]) item.repeat = REP[g("repeats").toLowerCase()];
+        if (item.status === "open" && parseDate(g("reminder"))) item.reminderAt = parseDate(g("reminder"));
         if (st.indexOf("later") >= 0 && created > now) item.hiddenUntil = created;
         var steps = g("steps");
         if (steps) item.steps = steps.split(" | ").map(function (x) {
